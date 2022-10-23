@@ -8,7 +8,7 @@ help() {
 }
 
 link() {
-  command echo "Create backup direrctory for old dotfiles..."
+  command echo "Create backup directory for old dotfiles..."
   if [ ! -d "$HOME/.dotbackup" ];then
     command echo "$HOME/.dotbackup not found. Generate .dotbackup directory."
     command mkdir "$HOME/.dotbackup"
