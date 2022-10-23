@@ -7,7 +7,7 @@ help() {
   command echo "    --help, -h        help message"
 }
 
-backup() {
+link() {
   command echo "backup old dotfiles..."
   if [ ! -d "$HOME/.dotbackup" ];then
     command echo "$HOME/.dotbackup not found. Generate .dotbackup directory."
@@ -16,20 +16,24 @@ backup() {
 
   local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
   local dotdir=$(dirname ${script_dir})
-#   if [[ "$HOME" != "$dotdir" ]];then
-#     for f in $dotdir/.??*; do
-#       [[ `basename $f` == ".git" ]] && continue
-#       if [[ -L "$HOME/`basename $f`" ]];then
-#         command rm -f "$HOME/`basename $f`"
-#       fi
-#       if [[ -e "$HOME/`basename $f`" ]];then
-#         command mv "$HOME/`basename $f`" "$HOME/.dotbackup"
-#       fi
-#       command ln -snf $f $HOME
-#     done
-#   else
-#     command echo "same install src dest"
-#   fi
+
+  if [[ "$HOME" != "$dotdir" ]];then
+    for f in $dotdir/.??*; do
+      [[ `basename $f` == ".git" ]] && continue
+      if [[ -L "$HOME/`basename $f`" ]];then
+        # command rm -f "$HOME/`basename $f`"
+        echo "command rm -f $HOME/`basename $f`"
+      fi
+      if [[ -e "$HOME/`basename $f`" ]];then
+        # command mv "$HOME/`basename $f`" "$HOME/.dotbackup"
+        echo "command mv $HOME/`basename $f` $HOME/.dotbackup"
+      fi
+      #command ln -snf $f $HOME
+      echo "command ln -snf $f $HOME"
+    done
+  else
+    command echo "The contents of the folder are same."
+  fi
 }
 
 while [ $# -gt 0 ];do
@@ -44,4 +48,4 @@ while [ $# -gt 0 ];do
   shift
 done
 
-backup
+link
