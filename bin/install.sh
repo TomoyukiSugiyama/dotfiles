@@ -8,7 +8,7 @@ help() {
 }
 
 link() {
-  command echo "backup old dotfiles..."
+  command echo "Create backup direrctory for old dotfiles..."
   if [ ! -d "$HOME/.dotbackup" ];then
     command echo "$HOME/.dotbackup not found. Generate .dotbackup directory."
     command mkdir "$HOME/.dotbackup"
@@ -17,6 +17,7 @@ link() {
   local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
   local dotdir=$(dirname ${script_dir})
 
+  command echo "Start to link dotfiles to the home directory."
   if [[ "$HOME" != "$dotdir" ]];then
     for f in $dotdir/.??*; do
       [[ `basename $f` == ".git" ]] && continue
@@ -32,7 +33,7 @@ link() {
       echo "command ln -snf $f $HOME"
     done
   else
-    command echo "The contents of the folder are same."
+    command echo "The contents of these directories are same."
   fi
 }
 
