@@ -33,7 +33,7 @@ function link() {
             echo "command ln -snf $f ${HOME}"
         done
     else
-        command echo "Home and dotfiles are same directory. Please change directory."
+        command echo "[Error] Home directory and dotfiles directory are same path. Please change your home or dotfiles directory path."
     fi
 }
 
