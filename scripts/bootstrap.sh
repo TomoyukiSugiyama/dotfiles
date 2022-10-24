@@ -39,6 +39,13 @@ function link() {
   fi
 }
 
+function setup_brew() {
+    if !(type brew > /dev/null 2>&1); then
+        command echo "Homebrew is not found in yourr local pc. Begin to install homebrew."
+        curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+    fi
+}
+
 while [ $# -gt 0 ];do
   case ${1} in
     --help|-h)
@@ -51,4 +58,5 @@ while [ $# -gt 0 ];do
   shift
 done
 
+setup_brew
 link
