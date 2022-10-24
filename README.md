@@ -1,7 +1,9 @@
 # dotfiles
 
-## Setup
+## Installation
 
-```zsh
-curl -fsSL https://raw.github.com/TomoyukiSugiyama/dotfiles/main/bin/install.sh | bash
+## Using Git
+
+```
+git clone https://github.com/TomoyukiSugiyama/dotfiles.git && cd dotfiles && source ./scripts/bootstrap.sh
 ```
