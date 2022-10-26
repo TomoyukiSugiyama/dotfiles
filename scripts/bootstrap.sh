@@ -46,7 +46,7 @@ function setup_brew() {
     command brew analytics off
     command brew cleanup --prune=all
     command brew upgrade
-    # command brew bundle --file "$HOME/dotfiles/Brewfile"
+    command brew bundle --file "${dotdir}/Brewfile"
     command brew doctor || true    
 }
 
