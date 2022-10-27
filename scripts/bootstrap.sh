@@ -47,7 +47,7 @@ function setup_brew() {
     command brew cleanup --prune=all
     command brew upgrade
     command brew bundle --file "${dotdir}/Brewfile"
-    command brew doctor || true    
+    command brew doctor || true
 }
 
 while [ $# -gt 0 ];do
