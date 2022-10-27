@@ -23,14 +23,14 @@ function link() {
             [[ $(basename "$f") == ".git" ]] && continue
             if [[ -L "${HOME}/$(basename "$f")" ]];then
                 # command rm -f "${HOME}/$(basename "$f")"
-                echo "command rm -f ${HOME}/$(basename "$f")"
+                command echo "command rm -f ${HOME}/$(basename "$f")"
             fi
             if [[ -e "${HOME}/$(basename "$f")" ]];then
                 # command mv "${HOME}/$(basename "$f")" "${HOME}/.dotbackup"
-                echo "command mv ${HOME}/$(basename "$f") ${HOME}/.dotbackup"
+                command echo "command mv ${HOME}/$(basename "$f") ${HOME}/.dotbackup"
             fi
             #command ln -snf $f ${HOME}
-            echo "command ln -snf $f ${HOME}"
+            command echo "command ln -snf $f ${HOME}"
         done
     else
         command echo "[Error] Home directory and dotfiles directory are same path. Please change your home or dotfiles directory path."
