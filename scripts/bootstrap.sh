@@ -62,5 +62,5 @@ while [ $# -gt 0 ];do
     shift
 done
 
-setup_brew
 link
+setup_brew
