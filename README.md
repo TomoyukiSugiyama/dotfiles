@@ -2,13 +2,13 @@
 
 ## Installation
 
-## Using curl
+## Install Brew & Git
 
 ```
-mkdir dotfiles \
-&& curl -#L https://github.com/TomoyukiSugiyama/dotfiles/tarball/main | tar -xzv --strip-components 1 -C dotfiles \
-&& cd dotfiles/scripts \
-&& ./bootstrap.sh
+mkdir -p tmp/scripts \
+&& curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/scrripts/bootstrap.sh > tmp/scripts/bootstrap.sh \
+&& curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/Brewfile > tmp/Brewfile \
+&& cd tmp/scripts && ./bootstrap.sh
 ```
 
 ## Using Git
