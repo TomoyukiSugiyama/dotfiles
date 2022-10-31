@@ -6,22 +6,21 @@
 
 ```bash
 mkdir -p tmp/scripts \
-&& curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/scripts/bootstrap.sh > tmp/scripts/bootstrap.sh \
+&& curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/scripts/bootstrap.zsh > tmp/scripts/bootstrap.zsh \
 && curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/Brewfile > tmp/Brewfile \
-&& cd tmp/scripts && chmod u+x bootstrap.sh && ./bootstrap.sh
+&& chmod u+x ./tmp/scripts/bootstrap.zsh && ./tmp/scripts/bootstrap.zsh
 ```
 
 ## Using Git
 
 ```bash
-git clone https://github.com/TomoyukiSugiyama/dotfiles.git && cd dotfiles/scripts && ./bootstrap.sh
+git clone https://github.com/TomoyukiSugiyama/dotfiles.git && ./dotfiles/scripts/bootstrap.zsh
 ```
 
 ## Link
 
 ```bash
-cd scripts
-./configuration.sh
+./scripts/configuration.zsh
 ```
 
 Edit your `.gitconfig.local`.
