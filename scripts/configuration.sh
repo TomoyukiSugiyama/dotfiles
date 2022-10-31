@@ -24,6 +24,9 @@ function link() {
         command cp "${dotdir}/git/.gitconfig.local" "${HOME}/.gitconfig.local"
     fi
 
+    # zsh
+    command ln -fs "${dotdir}/zsh/.zshrc" "${HOME}/.zshrc"
+    command zsh -c "$(source ${HOME}/.zshrc)"
 }
 
 link
