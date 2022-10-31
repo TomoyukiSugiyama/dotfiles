@@ -2,23 +2,19 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${(%):-%N}")" && pwd -P)"
+script_path="${(%):-%N}"
+script_dir="$(cd "$(dirname "${script_path}")" && pwd -P)"
 dotdir=$(dirname "${script_dir}")
 
+function help() {
+    echo "Usage:"
+    echo "    ${script_path} [--help | -h]" 0>&2
+    echo "Options:"
+    echo "    --help, -h        help message"
+}
+
 function link() {
-
-    echo "Create backup directory for old dotfiles..."
-
-    if [ ! -d "${HOME}/.dotbackup" ];then
-        echo "${HOME}/.dotbackup not found. Generate .dotbackup directory."
-        mkdir "${HOME}/.dotbackup"
-    fi
-
     echo "Start to link dotfiles to the home directory."
-    if [[ "${HOME}" == "${dotdir}" ]];then
-        echo "[Error] Home directory and dotfiles directory are same path. Please change your home or dotfiles directory path."
-        exit 1
-    fi
 
     # git
     ln -fs "${dotdir}/git/.gitignore" "${HOME}/.gitignore"
@@ -32,5 +28,17 @@ function link() {
     ln -fs "${dotdir}/zsh/.zshrc" "${HOME}/.zshrc"
     source "${HOME}/.zshrc"
 }
+
+while [ $# -gt 0 ];do
+    case ${1} in
+        --help|-h)
+            help
+            exit 1
+            ;;
+        *)
+            ;;
+    esac
+    shift
+done
 
 link
