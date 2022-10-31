@@ -27,6 +27,10 @@ function link() {
     # zsh
     ln -fs "${dotdir}/zsh/.zshrc" "${HOME}/.zshrc"
     source "${HOME}/.zshrc"
+
+    # system tool
+    sudo ln -fs "${script_dir}/system.zsh" "/usr/local/bin/system"
+
 }
 
 while [ $# -gt 0 ];do
