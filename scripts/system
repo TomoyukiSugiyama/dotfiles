@@ -15,6 +15,10 @@ function help() {
 }
 
 function update() {
+    git remote update --prune
+    git checkout main
+    git pull
+    
     ${script_dir}/bootstrap.zsh
     ${script_dir}/configuration.zsh
 }
