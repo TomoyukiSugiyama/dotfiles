@@ -1,5 +1,8 @@
 #!/bin/bash -ue
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+dotdir=$(dirname "${script_dir}")
+
 function link() {
     command echo "Create backup directory for old dotfiles..."
     if [ ! -d "${HOME}/.dotbackup" ];then
@@ -8,23 +11,19 @@ function link() {
     fi
 
     command echo "Start to link dotfiles to the home directory."
-    if [[ "${HOME}" != "${dotdir}" ]];then
-        for f in "${dotdir}"/.??*; do
-            [[ $(basename "$f") == ".git" ]] && continue
-            if [[ -L "${HOME}/$(basename "$f")" ]];then
-                # command rm -f "${HOME}/$(basename "$f")"
-                command echo "command rm -f ${HOME}/$(basename "$f")"
-            fi
-            if [[ -e "${HOME}/$(basename "$f")" ]];then
-                # command mv "${HOME}/$(basename "$f")" "${HOME}/.dotbackup"
-                command echo "command mv ${HOME}/$(basename "$f") ${HOME}/.dotbackup"
-            fi
-            #command ln -snf $f ${HOME}
-            command echo "command ln -snf $f ${HOME}"
-        done
-    else
+    if [[ "${HOME}" == "${dotdir}" ]];then
         command echo "[Error] Home directory and dotfiles directory are same path. Please change your home or dotfiles directory path."
+        exit 1
     fi
+
+    # git
+    ln -fs "${dotdir}/git/.gitignore" "${HOME}/.gitignore"
+    ln -fs "${dotdir}/git/.gitconfig" "${HOME}/.gitconfig"
+    if [[ ! -e "${HOME}/.gitconfig.local" ]]; then
+        echo "copy .gitconfig.local"
+        cp "${dotdir}/git/.gitconfig.local" "${HOME}/.gitconfig.local"
+    fi
+
 }
 
 link

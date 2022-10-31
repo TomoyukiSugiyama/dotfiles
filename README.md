@@ -16,3 +16,6 @@ mkdir -p tmp/scripts \
 ```
 git clone https://github.com/TomoyukiSugiyama/dotfiles.git && cd dotfiles/scripts && ./bootstrap.sh
 ```
+
+## Edit .gitconfig.local
+
