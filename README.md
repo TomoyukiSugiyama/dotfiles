@@ -2,7 +2,7 @@
 
 ## Installation
 
-## Install Brew & Git
+### Install Brew & Git
 
 ```bash
 mkdir -p tmp/scripts \
@@ -11,13 +11,13 @@ mkdir -p tmp/scripts \
 && chmod u+x ./tmp/scripts/bootstrap.zsh && ./tmp/scripts/bootstrap.zsh
 ```
 
-## Using Git
+### Using Git
 
 ```bash
 git clone https://github.com/TomoyukiSugiyama/dotfiles.git && ./dotfiles/scripts/bootstrap.zsh
 ```
 
-## Link
+### Configuration
 
 ```bash
 ./scripts/configuration.zsh
