@@ -1,0 +1,61 @@
+[include]
+    path = ~/.gitconfig.local
+[core]
+    editor          = code --wait # use Visual Studio Code
+    pager           = less
+    whitespace      = fix,-indent-with-non-tab,trailing-space,cr-at-eol,space-before-tab
+    excludesfile    = ~/.gitignore
+[color]
+    ui          = always
+    branch      = auto
+    diff        = auto
+    status      = auto
+    interactive = auto
+    grep        = auto
+[color "branch"]
+    current = yellow reverse
+    local   = yellow
+    remote  = green
+[color "diff"]
+    meta    = yellow bold
+    frag    = magenta bold
+    old     = red bold
+    new     = green bold
+[branch]
+    autosetupmerge  = false
+    autosetuprebase = always
+[rebase]
+    stat = true
+[merge]
+    stat = true
+    ff   = false # always create merge commit, even if merge can be resolved as fast-forward.
+[alias]
+    st          = status
+    cm          = commit
+    co          = checkout
+    push--f     = push --force-with-lease
+    tree        = log --graph --pretty='format:%C(yellow)%h%Creset %s %Cgreen(%an)%Creset %Cred%d%Creset'
+    wt          = whatchanged --stat
+    branch-name = symbolic-ref --short HEAD
+    delete-local-branches-merged-to = "!f () { git switch $1; git branch --merged | egrep -v '\\*|main|master' | xargs git branch -d; };f"
+[push]
+    # default = current # I want to avoid unintended push.
+[pull]
+    rebase = true
+[rerere]
+    enabled = true
+[grep]
+    lineNumber = true
+[help]
+    autocorrect = 0 # I don't need this personally.
+[pager]
+    log  = diff-highlight | less
+    show = diff-highlight | less
+    diff = diff-highlight | less
+[filter "lfs"]
+    process     = git-lfs filter-process
+    required    = true
+    clean       = git-lfs clean -- %f
+    smudge      = git-lfs smudge -- %f
+[init]
+    defaultBranch = main
