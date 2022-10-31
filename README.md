@@ -6,9 +6,9 @@
 
 ```
 mkdir -p tmp/scripts \
-&& curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/scrripts/bootstrap.sh > tmp/scripts/bootstrap.sh \
+&& curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/scripts/bootstrap.sh > tmp/scripts/bootstrap.sh \
 && curl https://raw.githubusercontent.com/TomoyukiSugiyama/dotfiles/main/Brewfile > tmp/Brewfile \
-&& cd tmp/scripts && ./bootstrap.sh
+&& cd tmp/scripts && chmod u+x bootstrap.sh && ./bootstrap.sh
 ```
 
 ## Using Git

@@ -14,7 +14,10 @@ function setup_brew() {
     command echo "setup brew"
     if ! (type brew > /dev/null 2>&1); then
         command echo "Homebrew is not found in your local pc. Begin to install homebrew."
-        command curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
+        command bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        echo '# Set PATH, MANPATH, etc., for Homebrew.' >> ~/.zprofile
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+        eval "$(/opt/homebrew/bin/brew shellenv)"
     fi
     command brew analytics off
     command brew cleanup --prune=all
