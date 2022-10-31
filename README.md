@@ -18,6 +18,7 @@ git clone https://github.com/TomoyukiSugiyama/dotfiles.git && cd dotfiles/script
 ```
 
 ## Link
+
 ```bash
 cd scripts
 ./configuration.sh
