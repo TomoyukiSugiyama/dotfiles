@@ -2,12 +2,13 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${(%):-%N}")" && pwd -P)"
+script_path="${(%):-%N}"
+script_dir="$(cd "$(dirname "${script_path}")" && pwd -P)"
 dotdir=$(dirname "${script_dir}")
 
 function help() {
     echo "Usage:"
-    echo "    $(basename "${0}") [--help | -h]" 0>&2
+    echo "    ${script_path} [--help | -h]" 0>&2
     echo "Options:"
     echo "    --help, -h        help message"
 }
