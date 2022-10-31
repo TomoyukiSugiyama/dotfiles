@@ -19,6 +19,7 @@ function link() {
     # git
     ln -fs "${dotdir}/git/.gitignore" "${HOME}/.gitignore"
     ln -fs "${dotdir}/git/.gitconfig" "${HOME}/.gitconfig"
+    ln -fs /usr/local/opt/git/share/git-core/contrib/diff-highlight/diff-highlight  /usr/local/bin
     if [[ ! -e "${HOME}/.gitconfig.local" ]]; then
         echo "copy .gitconfig.local"
         cp "${dotdir}/git/.gitconfig.local" "${HOME}/.gitconfig.local"
