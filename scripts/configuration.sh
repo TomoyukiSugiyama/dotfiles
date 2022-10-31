@@ -13,16 +13,15 @@ function link() {
     command echo "Start to link dotfiles to the home directory."
     if [[ "${HOME}" == "${dotdir}" ]];then
         command echo "[Error] Home directory and dotfiles directory are same path. Please change your home or dotfiles directory path."
-        exit 1
+        command exit 1
     fi
 
     # git
-    ln -fs "${dotdir}/git/.gitignore" "${HOME}/.gitignore"
-    ln -fs "${dotdir}/git/.gitconfig" "${HOME}/.gitconfig"
-    ln -fs /usr/local/opt/git/share/git-core/contrib/diff-highlight/diff-highlight  /usr/local/bin
+    command ln -fs "${dotdir}/git/.gitignore" "${HOME}/.gitignore"
+    command ln -fs "${dotdir}/git/.gitconfig" "${HOME}/.gitconfig"
     if [[ ! -e "${HOME}/.gitconfig.local" ]]; then
-        echo "copy .gitconfig.local"
-        cp "${dotdir}/git/.gitconfig.local" "${HOME}/.gitconfig.local"
+        command echo "copy .gitconfig.local"
+        command cp "${dotdir}/git/.gitconfig.local" "${HOME}/.gitconfig.local"
     fi
 
 }
