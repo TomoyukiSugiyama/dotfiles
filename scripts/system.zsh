@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-script_path="${(%):-%N}"
+linked_script_path="${(%):-%N}"
+script_path="$(readlink "${linked_script_path}")"
 script_dir="$(cd "$(dirname "${script_path}")" && pwd -P)"
 dotdir=$(dirname "${script_dir}")
 
