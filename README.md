@@ -4,7 +4,7 @@ Dotfiles for mac.
 ## Installation
 These dotfiles are managed by brew, git and zsh scripts.
 If you have git in your local pc, please install from 2nd step.
-Otherwize, please install by 1st step.
+Otherwise, please install by 1st step.
 
 ### 1. Install git and minimal packages by using brew
 Brew is installed by using `bootstrap.zsh`, if not exist in your local pc.
