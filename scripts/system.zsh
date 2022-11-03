@@ -21,8 +21,8 @@ function update() {
     git branch --set-upstream-to="origin/main" "main"
     git pull
 
-    ${script_dir}/bootstrap.zsh
-    ${script_dir}/configuration.zsh
+    "${script_dir}"/bootstrap.zsh
+    "${script_dir}"/configuration.zsh
 }
 
 while [ $# -gt 0 ];do
