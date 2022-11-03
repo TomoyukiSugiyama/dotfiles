@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# shellcheck disable=SC2296 # https://www.shellcheck.net/wiki/SC2296
+# shellcheck disable=SC1091,SC2296
 
 set -euo pipefail
 
