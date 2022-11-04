@@ -8,5 +8,9 @@ export TERM=xterm-256color
 autoload -U compinit
 compinit
 
-# alias
-alias ls='ls -G'
+source "${HOME}/.zsh.alias.zsh"
+
+# k8s
+source <(kubectl completion zsh)
+alias k=kubectl
+compdef __start_kubectl k
