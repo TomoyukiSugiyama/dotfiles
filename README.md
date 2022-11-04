@@ -39,3 +39,16 @@ Edit your `.gitconfig.local` and set name and email.
 ```bash
 vi ~/.gitconfig.local
 ```
+
+## Update
+Update system.
+
+```
+system -u
+```
+
+## iTerm2 Configuration
+1. Open iTerm2
+2. Click iTerm2 -> Preferences -> General -> Preferences
+3. Enable "Load preferences from a custom folder or URL"
+4. Browse your config. ( `./iterm2/com.googlecode.iterm2.plist` ) 
