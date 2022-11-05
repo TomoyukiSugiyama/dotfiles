@@ -1,3 +1,5 @@
+# shellcheck disable=SC1091
+
 export PATH="$PATH:/opt/homebrew/share/git-core/contrib/diff-highlight"
 export PATH="/usr/local/sbin:$PATH"
 
@@ -8,5 +10,5 @@ export TERM=xterm-256color
 autoload -U compinit
 compinit
 
-# alias
-alias ls='ls -G'
+source "${HOME}/.zsh.alias.zsh"
+
