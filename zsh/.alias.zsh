@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck disable=SC1090
 
 # alias
 alias ls='ls -G'
