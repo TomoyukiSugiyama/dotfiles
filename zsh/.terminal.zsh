@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+# shellcheck disable=SC2034,SC2154
 
 export CLICOLOR=1
 export TERM=xterm-256color
