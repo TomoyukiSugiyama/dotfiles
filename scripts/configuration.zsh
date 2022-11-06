@@ -26,6 +26,7 @@ function link() {
     fi
 
     # zsh
+    ln -fs "${dotdir}/zsh/.path.zsh" "${HOME}/.zsh.path.zsh"    
     ln -fs "${dotdir}/zsh/.alias.zsh" "${HOME}/.zsh.alias.zsh"    
     ln -fs "${dotdir}/zsh/.zshrc" "${HOME}/.zshrc"
     source "${HOME}/.zshrc"
