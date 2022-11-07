@@ -7,13 +7,6 @@ export TERM=xterm-256color
 autoload -Uz colors
 colors
 
-autoload -Uz compinit
-compinit
-
-HISTFILE="${HOME}/.zsh_history"
-HISTSIZE=100000
-SAVEHIST=100000
-
 PROMPT="%{${fg[blue]}%}%n:%{${reset_color}%} %c/ %# "
 
 # vcs_info
@@ -31,3 +24,14 @@ add-zsh-hook precmd _update_vcs_info_msg
 
 # setopt
 setopt no_beep
+
+# history
+HISTFILE="${HOME}/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+# complement
+autoload -Uz compinit
+compinit
+
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
