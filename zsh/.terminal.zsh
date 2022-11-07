@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# shellcheck disable=SC2034,SC2154
+# shellcheck disable=SC1091,SC2034,SC2154
 
 export CLICOLOR=1
 export TERM=xterm-256color
@@ -10,9 +10,11 @@ colors
 autoload -Uz compinit
 compinit
 
-PROMPT="%{${fg[blue]}%}%n:%{${reset_color}%} %c/ %# "
+HISTFILE="${HOME}/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
 
-setopt no_beep
+PROMPT="%{${fg[blue]}%}%n:%{${reset_color}%} %c/ %# "
 
 # vcs_info
 autoload -Uz vcs_info
@@ -26,3 +28,6 @@ function _update_vcs_info_msg() {
     RPROMPT="${vcs_info_msg_0_}"
 }
 add-zsh-hook precmd _update_vcs_info_msg
+
+# setopt
+setopt no_beep
