@@ -24,6 +24,7 @@ add-zsh-hook precmd _update_vcs_info_msg
 
 # setopt
 setopt no_beep
+setopt nolistbeep
 
 # history
 HISTFILE="${HOME}/.zsh_history"
