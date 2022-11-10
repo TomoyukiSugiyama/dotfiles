@@ -16,6 +16,7 @@ function help() {
 }
 
 function update() {
+    cd "${script_dir}"
     git remote update --prune
     git checkout main
     git branch --set-upstream-to="origin/main" "main"
