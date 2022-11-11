@@ -1,13 +1,14 @@
 #!/usr/bin/env zsh
 # shellcheck disable=SC1091,SC2034,SC2154
 
-export CLICOLOR=1
-export TERM=xterm-256color
+# terminal
+CLICOLOR=1
+TERM=xterm-256color
 
 autoload -Uz colors
 colors
 
-PROMPT="%{${fg[blue]}%}%n:%{${reset_color}%} %c/ %# "
+PROMPT="%F{blue}[%m][%n]:%f %c/ %# "
 
 # vcs_info
 autoload -Uz vcs_info
