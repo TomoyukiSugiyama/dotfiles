@@ -14,3 +14,8 @@ alias gp='git pull --rebase'
 source <(kubectl completion zsh)
 alias k=kubectl
 compdef __start_kubectl k
+
+# helm
+source <(helm completion zsh)
+alias h=helm
+compdef __start_helm h
