@@ -12,6 +12,7 @@ brew "tfenv"
 brew "ansible"
 brew "kubectl"
 brew "helm"
+brew "sops"
 
 cask "iterm2"
 cask "visual-studio-code"
