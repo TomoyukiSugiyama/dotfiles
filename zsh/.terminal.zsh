@@ -43,3 +43,6 @@ source <(kubectl completion zsh)
 
 # helm
 source <(helm completion zsh)
+
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C /opt/homebrew/Cellar/tfenv/3.0.0/versions/1.3.4/terraform terraform

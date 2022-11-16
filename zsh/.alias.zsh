@@ -14,3 +14,6 @@ alias k=kubectl
 
 # helm
 alias h=helm
+
+# terraform
+alias t=terraform
