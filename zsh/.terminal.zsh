@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# shellcheck disable=SC1091,SC2034,SC2154
+# shellcheck disable=SC1090,SC1091,SC2034,SC2154
 
 # terminal
 CLICOLOR=1
@@ -37,3 +37,9 @@ autoload -Uz compinit
 compinit
 
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+# k8s
+source <(kubectl completion zsh)
+
+# helm
+source <(helm completion zsh)
