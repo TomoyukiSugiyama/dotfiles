@@ -46,3 +46,9 @@ source <(helm completion zsh)
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C terraform terraform
+
+# cloudsql
+if (type cloudsql > /dev/null 2>&1); then
+    source <(cloudsql completion zsh)
+    compdef _cloudsql cloudsql
+fi
