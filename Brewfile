@@ -13,6 +13,8 @@ brew "ansible"
 brew "kubectl"
 brew "helm"
 brew "sops"
+brew "go"
+brew "postgresql"
 
 cask "iterm2"
 cask "visual-studio-code"
