@@ -52,3 +52,9 @@ if (type cloudsql > /dev/null 2>&1); then
     source <(cloudsql completion zsh)
     compdef _cloudsql cloudsql
 fi
+
+# any-connect
+if (type any-connect > /dev/null 2>&1); then
+    source <(any-connect completion zsh)
+    compdef _any-connect any-connect
+fi
