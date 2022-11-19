@@ -1,0 +1,17 @@
+github-action:
+  - .github/**/*
+
+git:
+  - git/*
+
+iterm2:
+  - iterm2/*
+
+scripts:
+  - scripts/*
+
+zsh:
+  - zsh/*
+
+brew:
+  - Brewfile
