@@ -58,3 +58,6 @@ if (type any-connect > /dev/null 2>&1); then
     source <(any-connect completion zsh)
     compdef _any-connect any-connect
 fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '${HOME}/google-cloud-sdk/completion.zsh.inc' ]; then . '${HOME}/google-cloud-sdk/completion.zsh.inc'; fi
