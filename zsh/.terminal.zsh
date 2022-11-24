@@ -1,7 +1,9 @@
 #!/usr/bin/env zsh
 # shellcheck disable=SC1090,SC1091,SC2034,SC2154
 
+# --------------------------------------------------
 # terminal
+# --------------------------------------------------
 CLICOLOR=1
 TERM=xterm-256color
 
@@ -9,6 +11,12 @@ autoload -Uz colors
 colors
 
 PROMPT="%F{blue}[%m][%n]:%f %c/ %# "
+
+if [ -f "/opt/homebrew/share/kube-ps1.sh" ]; then 
+    ## if you want to customize, please edit `~/.kube/config`
+    source /opt/homebrew/share/kube-ps1.sh
+    PS1='$(kube_ps1) '$PS1
+fi
 
 # vcs_info
 # autoload -Uz vcs_info
@@ -32,7 +40,9 @@ HISTFILE="${HOME}/.zsh_history"
 HISTSIZE=100000
 SAVEHIST=100000
 
+# --------------------------------------------------
 # complement
+# --------------------------------------------------
 autoload -Uz compinit
 compinit
 
@@ -60,4 +70,6 @@ if (type any-connect > /dev/null 2>&1); then
 fi
 
 # The next line enables shell command completion for gcloud.
-if [ -f "${HOME}/google-cloud-sdk/completion.zsh.inc" ]; then . "${HOME}/google-cloud-sdk/completion.zsh.inc"; fi
+if [ -f "${HOME}/google-cloud-sdk/completion.zsh.inc" ]; then
+    . "${HOME}/google-cloud-sdk/completion.zsh.inc"
+fi
