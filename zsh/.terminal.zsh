@@ -70,6 +70,6 @@ if (type any-connect > /dev/null 2>&1); then
 fi
 
 # The next line enables shell command completion for gcloud.
-if [ -f "${HOME}/google-cloud-sdk/completion.zsh.inc" ]; then
-    . "${HOME}/google-cloud-sdk/completion.zsh.inc"
+if [ -f "$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc" ]; then
+    source "$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/completion.zsh.inc"
 fi
