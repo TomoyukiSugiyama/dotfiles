@@ -11,6 +11,8 @@ alias gp='git pull --rebase'
 
 # k8s
 alias k=kubectl
+alias kc=kubectx
+alias kn=kubens
 
 # helm
 alias h=helm
