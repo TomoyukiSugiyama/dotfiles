@@ -12,9 +12,9 @@ colors
 
 PROMPT="%F{blue}[%m][%n]:%f %c/ %# "
 
-if [ -f "/opt/homebrew/share/kube-ps1.sh" ]; then 
+if [ -f "$(brew --prefix)/share/kube-ps1.sh" ]; then 
     ## if you want to customize, please edit `~/.kube/config`
-    source /opt/homebrew/share/kube-ps1.sh
+    source "$(brew --prefix)/share/kube-ps1.sh"
     PS1='$(kube_ps1) '$PS1
 fi
 
