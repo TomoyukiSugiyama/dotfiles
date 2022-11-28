@@ -19,6 +19,8 @@ brew "fzf"
 brew "helm"
 brew "go"
 brew "postgresql"
+brew "jq"
+brew "yq"
 
 cask "iterm2"
 cask "visual-studio-code"
