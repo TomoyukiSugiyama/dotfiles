@@ -15,7 +15,7 @@ PROMPT="%F{blue}[%m][%n]:%f %c/ %# "
 if [ -f "$(brew --prefix)/share/kube-ps1.sh" ]; then 
     ## if you want to customize, please edit `~/.kube/config`
     source "$(brew --prefix)/share/kube-ps1.sh"
-    PROMPT='$(kube_ps1) '$PROMPT
+    PROMPT="$(kube_ps1) "$PROMPT
 fi
 
 # vcs_info
