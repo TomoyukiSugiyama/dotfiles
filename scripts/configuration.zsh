@@ -27,7 +27,6 @@ function link() {
 
     # system tool
     sudo ln -fs "${script_dir}/system.zsh" "/usr/local/bin/system"
-
 }
 
 link
