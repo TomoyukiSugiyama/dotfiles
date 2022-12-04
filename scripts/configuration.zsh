@@ -7,13 +7,6 @@ script_path="${(%):-%N}"
 script_dir="$(cd "$(dirname "${script_path}")" && pwd -P)"
 dotdir=$(dirname "${script_dir}")
 
-function help() {
-    echo "Usage:"
-    echo "    ${script_path} [--help | -h]" 0>&2
-    echo "Options:"
-    echo "    --help, -h        help message"
-}
-
 function link() {
     echo "Start to link dotfiles to the home directory."
 
@@ -34,19 +27,6 @@ function link() {
 
     # system tool
     sudo ln -fs "${script_dir}/system.zsh" "/usr/local/bin/system"
-
 }
-
-while [ $# -gt 0 ];do
-    case ${1} in
-        --help|-h)
-            help
-            exit 1
-            ;;
-        *)
-            ;;
-    esac
-    shift
-done
 
 link
