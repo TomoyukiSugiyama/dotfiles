@@ -16,7 +16,7 @@ if [ -f "$(brew --prefix)/share/kube-ps1.sh" ]; then
     ## if you want to customize, please edit `~/.kube/config`
     set +u
     source "$(brew --prefix)/share/kube-ps1.sh"
-    PROMPT="$(kube_ps1) "$PROMPT
+    PS1='$(kube_ps1) '$PS1
 fi
 
 # vcs_info
