@@ -15,6 +15,7 @@ PROMPT="%F{blue}[%m][%n]:%f %c/ %# "
 if [ -f "$(brew --prefix)/share/kube-ps1.sh" ]; then 
     ## if you want to customize, please edit `~/.kube/config`
     set +u
+    KUBE_PS1_SYMBOL_USE_IMG=true
     source "$(brew --prefix)/share/kube-ps1.sh"
     PS1='$(kube_ps1) '$PS1
 fi
