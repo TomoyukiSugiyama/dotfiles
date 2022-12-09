@@ -60,4 +60,4 @@
 [init]
     defaultBranch = main
 [diff "sopsdiffer"]
-	textconv = sops -d
+    textconv = sops -d
