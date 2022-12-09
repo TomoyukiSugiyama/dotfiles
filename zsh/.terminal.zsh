@@ -58,6 +58,9 @@ source <(kubectl completion zsh)
 # helm
 source <(helm completion zsh)
 
+# helmfile
+source <(helmfile completion zsh)
+
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C terraform terraform
 
