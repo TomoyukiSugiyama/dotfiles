@@ -24,6 +24,8 @@ function update() {
 
     "${script_dir}"/bootstrap.zsh
     "${script_dir}"/configuration.zsh
+
+    gcloud components update --quiet
 }
 
 while [ $# -gt 0 ];do
