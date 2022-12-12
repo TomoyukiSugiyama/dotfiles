@@ -16,6 +16,7 @@ alias kn=kubens
 
 # helm
 alias h=helm
+alias hf=helmfile
 
 # terraform
 alias t=terraform
