@@ -8,3 +8,6 @@ export PATH="/usr/local/sbin:$PATH"
 if [ -f "$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ]; then
     source "$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
 fi
+
+# gcloud.
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
