@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# shellcheck disable=SC2296
+# shellcheck disable=SC1091,SC2296
 
 set -euo pipefail
 
@@ -23,4 +23,20 @@ function setup_brew() {
     brew doctor || true
 }
 
+function setup_gcloud_components() {
+    # The next line updates PATH for the Google Cloud SDK.
+    if [ -f "$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc" ]; then
+        source "$(brew --prefix)/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+    fi
+    gcloud components install anthos-auth
+    gcloud components install gke-gcloud-auth-plugin
+}
+
+function setup_helm_plugins(){
+    helm plugin install https://github.com/jkroepke/helm-secrets || true
+    helm plugin install https://github.com/databus23/helm-diff || true
+}
+
 setup_brew
+setup_gcloud_components
+setup_helm_plugins
