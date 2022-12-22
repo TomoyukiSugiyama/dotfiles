@@ -24,6 +24,7 @@ brew "postgresql"
 brew "jq"
 brew "yq"
 brew "ag"
+brew "watch"
 
 cask "iterm2"
 cask "visual-studio-code"
