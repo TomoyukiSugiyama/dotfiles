@@ -26,7 +26,9 @@ function link() {
     source "${HOME}/.zshrc"
 
     # system tool
-    sudo ln -fs "${script_dir}/system.zsh" "/usr/local/bin/system"
+    if ! (type system > /dev/null 2>&1); then
+        sudo ln -fs "${script_dir}/system.zsh" "/usr/local/bin/system"
+    fi
 }
 
 link
