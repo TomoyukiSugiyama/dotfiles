@@ -23,6 +23,7 @@ brew "go"
 brew "postgresql"
 brew "jq"
 brew "yq"
+brew "ag"
 
 cask "iterm2"
 cask "visual-studio-code"
