@@ -12,6 +12,6 @@ fi
 # gcloud.
 export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
-if [ -f $HOME/.cargo/env]; then
+if [ -f "$HOME/.cargo/env" ]; then
     source "$HOME/.cargo/env"
 fi
