@@ -39,7 +39,7 @@ function setup_helm_plugins(){
 
 function setup_rust(){
     if ! (type rust > /dev/null 2>&1); then
-        rustup-init
+        rustup-init -y
     fi
 }
 
