@@ -37,6 +37,13 @@ function setup_helm_plugins(){
     helm plugin install https://github.com/databus23/helm-diff || true
 }
 
+function setup_rust(){
+    if ! (type rust > /dev/null 2>&1); then
+        rustup-init
+    fi
+}
+
 setup_brew
 setup_gcloud_components
 setup_helm_plugins
+setup_rust
