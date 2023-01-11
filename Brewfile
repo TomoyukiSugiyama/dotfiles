@@ -27,6 +27,7 @@ brew "jq"
 brew "yq"
 brew "ag"
 brew "watch"
+brew "asdf"
 
 cask "iterm2"
 cask "visual-studio-code"
