@@ -15,3 +15,8 @@ export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 if [ -f "$HOME/.cargo/env" ]; then
     source "$HOME/.cargo/env"
 fi
+
+# asdf
+if [ -f "/opt/homebrew/opt/asdf/libexec/asdf.sh" ]; then
+    source "$(brew --prefix)/opt/asdf/libexec/asdf.sh"
+fi
