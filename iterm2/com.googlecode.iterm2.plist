@@ -835,7 +835,7 @@
 			<key>Terminal Type</key>
 			<string>xterm-256color</string>
 			<key>Transparency</key>
-			<real>0.24641788563829786</real>
+			<real>0.056324800531914895</real>
 			<key>Unlimited Scrollback</key>
 			<false/>
 			<key>Use Bold Font</key>
@@ -891,6 +891,8 @@
 	</dict>
 	<key>SoundForEsc</key>
 	<false/>
+	<key>SplitPaneDimmingAmount</key>
+	<real>0.40000000000000002</real>
 	<key>VisualIndicatorForEsc</key>
 	<false/>
 </dict>
