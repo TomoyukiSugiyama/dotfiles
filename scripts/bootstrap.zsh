@@ -37,6 +37,16 @@ function setup_helm_plugins(){
     helm plugin install https://github.com/databus23/helm-diff || true
 }
 
+function setup_krew_plugins(){
+    kubectl krew install view-secret
+    kubectl krew install view-allocations
+    kubectl krew install score
+    kubectl krew install sniff
+    kubectl krew install tree
+    kubectl krew install resource-capacity
+    kubectl krew upgrade
+}
+
 function setup_rust(){
     if ! (type rustc > /dev/null 2>&1); then
         rustup-init -y
@@ -47,3 +57,4 @@ setup_brew
 setup_gcloud_components
 setup_helm_plugins
 setup_rust
+setup_krew_plugins
