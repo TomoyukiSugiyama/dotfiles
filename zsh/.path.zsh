@@ -20,3 +20,6 @@ fi
 if [ -f "/opt/homebrew/opt/asdf/libexec/asdf.sh" ]; then
     source "$(brew --prefix)/opt/asdf/libexec/asdf.sh"
 fi
+
+# krew
+export PATH="${PATH}:${HOME}/.krew/bin"
