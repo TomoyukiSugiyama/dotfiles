@@ -55,6 +55,9 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 # k8s
 source <(kubectl completion zsh)
 
+source <(kwokctl completion zsh)
+compdef _kwokctl kwokctl
+
 # helm
 source <(helm completion zsh)
 
