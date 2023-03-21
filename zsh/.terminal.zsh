@@ -67,11 +67,9 @@ source <(helmfile completion zsh)
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C terraform terraform
 
-# cloudsql
-if (type cloudsql > /dev/null 2>&1); then
-    source <(cloudsql completion zsh)
-    compdef _cloudsql cloudsql
-fi
+# cloud-sql-proxy-v2-operator
+source <(cloud-sql-proxy-v2-operator completion zsh)
+compdef _cloud-sql-proxy-v2-operator cloud-sql-proxy-v2-operator
 
 # any-connect
 if (type any-connect > /dev/null 2>&1); then
