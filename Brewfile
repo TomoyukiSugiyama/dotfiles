@@ -1,6 +1,7 @@
 tap "homebrew/bundle"
 tap "homebrew/cask"
 tap "homebrew/core"
+tap "TomoyukiSugiyama/homebrew-tap"
 cask_args appdir: "/Applications"
 
 brew "zsh"
@@ -30,6 +31,7 @@ brew "yq"
 brew "ag"
 brew "watch"
 brew "asdf"
+brew "tomoyukisugiyama/tap/cloud-sql-proxy-v2-operator"
 
 cask "iterm2"
 cask "visual-studio-code"

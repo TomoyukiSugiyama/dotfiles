@@ -20,3 +20,6 @@ alias hf=helmfile
 
 # terraform
 alias t=terraform
+
+# cloud-sql-proxy-v2-operator
+alias sql=cloud-sql-proxy-v2-operator
