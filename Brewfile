@@ -32,6 +32,7 @@ brew "ag"
 brew "watch"
 brew "asdf"
 brew "tomoyukisugiyama/tap/cloud-sql-proxy-v2-operator"
+brew "k6"
 
 cask "iterm2"
 cask "visual-studio-code"
