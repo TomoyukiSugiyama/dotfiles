@@ -3,4 +3,5 @@
 source "${HOME}/.zsh.terminal.zsh"
 source "${HOME}/.zsh.path.zsh"
 source "${HOME}/.zsh.alias.zsh"
+source "${HOME}/.zsh.local.zsh"
 
