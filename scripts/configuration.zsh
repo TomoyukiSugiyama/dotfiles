@@ -19,6 +19,9 @@ function link() {
     fi
 
     # zsh
+    if [[ ! -e "../zsh/.local.zsh" ]]; then
+        touch ../zsh/.local.zsh
+    fi
     ln -fs "${dotdir}/zsh/.terminal.zsh" "${HOME}/.zsh.terminal.zsh"    
     ln -fs "${dotdir}/zsh/.path.zsh" "${HOME}/.zsh.path.zsh"    
     ln -fs "${dotdir}/zsh/.alias.zsh" "${HOME}/.zsh.alias.zsh"    
