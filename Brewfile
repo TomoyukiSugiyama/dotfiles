@@ -35,6 +35,8 @@ brew "asdf"
 brew "tomoyukisugiyama/tap/cloud-sql-proxy-v2-operator"
 brew "k6"
 brew "nkf"
+brew "mysql-client"
+brew "pigz"
 
 cask "iterm2"
 cask "visual-studio-code"
