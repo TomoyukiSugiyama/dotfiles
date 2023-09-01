@@ -37,6 +37,7 @@ brew "k6"
 brew "nkf"
 brew "mysql-client"
 brew "pigz"
+brew "fujiwara/tap/lambroll"
 
 cask "iterm2"
 cask "visual-studio-code"
