@@ -4,15 +4,21 @@ tap "homebrew/core"
 tap "TomoyukiSugiyama/homebrew-tap"
 cask_args appdir: "/Applications"
 
+# shell
 brew "zsh"
+# git
 brew "git"
 brew "git-lfs"
 brew "tig"
+# aws
 brew "awscli"
 brew "aws-vault"
+brew "fujiwara/tap/lambroll"
+# infra
 brew "tfenv"
 brew "sops"
 brew "ansible"
+# kubernetes
 brew "kubectl"
 brew "kubectx"
 brew "kube-ps1"
@@ -24,20 +30,24 @@ brew "helm"
 brew "helmfile"
 brew "skaffold"
 brew "argocd"
+brew "k6"
+# application
 brew "rustup-init"
 brew "go"
+# db
 brew "postgresql"
+brew "mysql-client"
+# tools
 brew "jq"
 brew "yq"
 brew "ag"
 brew "watch"
 brew "asdf"
-brew "tomoyukisugiyama/tap/cloud-sql-proxy-v2-operator"
-brew "k6"
 brew "nkf"
-brew "mysql-client"
 brew "pigz"
-brew "fujiwara/tap/lambroll"
+# my brew
+brew "tomoyukisugiyama/tap/cloud-sql-proxy-v2-operator"
+brew "tomoyukisugiyama/tap/any-connect"
 
 cask "iterm2"
 cask "visual-studio-code"
