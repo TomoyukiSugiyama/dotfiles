@@ -19,6 +19,7 @@ brew "tfenv"
 brew "sops"
 brew "ansible"
 brew "asdf"
+brew "rtx"
 # kubernetes
 brew "kubernetes-cli"
 brew "kubectx"
