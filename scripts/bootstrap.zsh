@@ -20,6 +20,9 @@ function setup_brew() {
     brew cleanup --prune=all
     brew upgrade
     brew bundle --file "${dotdir}/Brewfile"
+    if [ -f "${dotdir}/Brewfile.local" ]; then
+        brew bundle --file "${dotdir}/Brewfile.local"
+    fi
     brew doctor || true
 }
 
