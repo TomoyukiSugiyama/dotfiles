@@ -78,5 +78,3 @@ vscode "redhat.vscode-yaml"
 vscode "rust-lang.rust-analyzer"
 vscode "serayuzgur.crates"
 vscode "yzhang.markdown-all-in-one"
-
-load File.expand_path("./Brewfile.local", __FILE__)

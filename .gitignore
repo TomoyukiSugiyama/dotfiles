@@ -1,4 +1,5 @@
 Brewfile.lock.json
 Brewfile.local
+Brewfile.local.lock.json
 
 zsh/.local.zsh
