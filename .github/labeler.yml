@@ -1,35 +1,17 @@
 github-action:
-  - all:
-      - changed-files:
-          - any-glob-to-all-files:
-              - '.github/**/*'
+  - '.github/**/*'
 
 git:
-  - all:
-      - changed-files:
-          - any-glob-to-all-files:
-              - 'git/*'
+  - 'git/*'
 
 iterm2:
-  - all:
-      - changed-files:
-          - any-glob-to-all-files:
-              - 'iterm2/*'
+  - 'iterm2/*'
 
 scripts:
-  - all:
-      - changed-files:
-          - any-glob-to-all-files:
-              - 'scripts/*'
+  - 'scripts/*'
 
 zsh:
-  - all:
-      - changed-files:
-          - any-glob-to-all-files:
-              - 'zsh/*'
+  - 'zsh/*'
 
 brew:
-  - all:
-      - changed-files:
-          - any-glob-to-all-files:
-              - 'Brewfile'
+  - 'Brewfile'
