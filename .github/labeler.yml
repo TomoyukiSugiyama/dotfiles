@@ -1,17 +1,17 @@
 github-action:
-  - .github/**/*
+  - '.github/**/*'
 
 git:
-  - git/*
+  - 'git/*'
 
 iterm2:
-  - iterm2/*
+  - 'iterm2/*'
 
 scripts:
-  - scripts/*
+  - 'scripts/*'
 
 zsh:
-  - zsh/*
+  - 'zsh/*'
 
 brew:
-  - Brewfile
+  - 'Brewfile'
