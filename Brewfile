@@ -33,6 +33,7 @@ brew "helmfile"
 brew "skaffold"
 brew "argocd"
 brew "k6"
+brew "int128/kubelogin/kubelogin"
 # application
 brew "rustup-init"
 brew "go"
