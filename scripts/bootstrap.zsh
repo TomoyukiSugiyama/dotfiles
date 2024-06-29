@@ -19,6 +19,7 @@ function setup_brew() {
     brew analytics off
     brew cleanup --prune=all
     brew upgrade
+    brew upgrade --cask --greedy
     brew bundle --file "${dotdir}/Brewfile"
     if [ -f "${dotdir}/Brewfile.local" ]; then
         brew bundle --file "${dotdir}/Brewfile.local"
