@@ -37,11 +37,19 @@ function setup_gcloud_components() {
 }
 
 function setup_helm_plugins(){
+    if ! (type helm > /dev/null 2>&1); then
+        echo "helm is not found in your local pc. "
+        return
+    fi
     helm plugin install https://github.com/jkroepke/helm-secrets || true
     helm plugin install https://github.com/databus23/helm-diff || true
 }
 
 function setup_krew_plugins(){
+    if ! (kubectl krew >/dev/null 2>&1); then
+        echo "kubectl krew is not found in your local pc. "
+        return
+    fi
     kubectl krew install view-secret
     kubectl krew install view-allocations
     kubectl krew install score
@@ -52,6 +60,10 @@ function setup_krew_plugins(){
 }
 
 function setup_rust(){
+    if ! (type rustup-init > /dev/null 2>&1); then
+        echo "rustup-init is not found in your local pc. "
+        return
+    fi
     if ! (type rustc > /dev/null 2>&1); then
         rustup-init -y
     fi
@@ -62,3 +74,4 @@ setup_gcloud_components
 setup_helm_plugins
 setup_rust
 setup_krew_plugins
+
