@@ -8,3 +8,4 @@ brew "zsh"
 # git
 brew "git"
 brew "git-lfs"
+brew "git-delta"
