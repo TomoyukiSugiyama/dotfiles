@@ -38,7 +38,7 @@ function setup_gcloud_components() {
 
 function setup_helm_plugins(){
     if ! (type helm > /dev/null 2>&1); then
-        echo "helm is not found in your local pc. "
+        echo "helm is not found in your local pc."
         return
     fi
     helm plugin install https://github.com/jkroepke/helm-secrets || true
@@ -47,7 +47,7 @@ function setup_helm_plugins(){
 
 function setup_krew_plugins(){
     if ! (kubectl krew >/dev/null 2>&1); then
-        echo "kubectl krew is not found in your local pc. "
+        echo "kubectl krew is not found in your local pc."
         return
     fi
     kubectl krew install view-secret
@@ -61,7 +61,7 @@ function setup_krew_plugins(){
 
 function setup_rust(){
     if ! (type rustup-init > /dev/null 2>&1); then
-        echo "rustup-init is not found in your local pc. "
+        echo "rustup-init is not found in your local pc."
         return
     fi
     if ! (type rustc > /dev/null 2>&1); then
