@@ -65,7 +65,6 @@ cask "parallels-client"
 cask "dbeaver-community"
 cask "wireshark"
 cask "anydesk"
-cask "authy"
 
 # vscode extentions
 vscode "1YiB.rust-bundle"
