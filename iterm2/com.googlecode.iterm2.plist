@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>AutoCommandHistory</key>
+	<true/>
+	<key>AutoComposer</key>
+	<true/>
 	<key>Command</key>
 	<string></string>
 	<key>Custom Color Presets</key>
@@ -221,6 +225,8 @@
 	<string>Arrangement 1</string>
 	<key>Default Bookmark Guid</key>
 	<string>A2A0DABA-A35C-4DA8-909B-AC81B3CEDB0F</string>
+	<key>Default Toolbelt Width</key>
+	<real>250</real>
 	<key>GlobalKeyMap</key>
 	<dict>
 		<key>0x19-0x60000</key>
@@ -963,6 +969,8 @@
 			<string>/Users/tomoyuki.sugiyama</string>
 		</dict>
 	</array>
+	<key>PMPrintingExpandedStateForPrint2</key>
+	<false/>
 	<key>PointerActions</key>
 	<dict>
 		<key>Button,1,1,,</key>
@@ -996,10 +1004,16 @@
 			<string>kNextWindowPointerAction</string>
 		</dict>
 	</dict>
+	<key>Print In Black And White</key>
+	<true/>
 	<key>SoundForEsc</key>
 	<false/>
 	<key>SplitPaneDimmingAmount</key>
 	<real>0.40000000000000002</real>
+	<key>ToolbeltTools</key>
+	<array>
+		<string>Snippets</string>
+	</array>
 	<key>VisualIndicatorForEsc</key>
 	<false/>
 	<key>Window Arrangements</key>
