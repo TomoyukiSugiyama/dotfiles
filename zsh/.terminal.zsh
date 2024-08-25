@@ -10,7 +10,7 @@ TERM=xterm-256color
 autoload -Uz colors
 colors
 
-PROMPT="%F{blue}[%m][%n]:%f %c/ 
+PROMPT="%F{blue}:%f %c/ 
 %# "
 
 # vcs_info
