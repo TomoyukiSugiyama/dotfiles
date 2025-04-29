@@ -67,6 +67,7 @@ function setup_rust(){
     if ! (type rustc > /dev/null 2>&1); then
         rustup-init -y
     fi
+    rustup update
 }
 
 setup_brew
