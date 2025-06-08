@@ -1,17 +1,15 @@
 #!/usr/bin/env zsh
-# shellcheck disable=SC1090,SC1091,SC2034,SC2154
+# shellcheck disable=SC1090,SC1091
 
 # --------------------------------------------------
 # terminal
 # --------------------------------------------------
-CLICOLOR=1
-TERM=xterm-256color
+export CLICOLOR=1 TERM=xterm-256color
 
 autoload -Uz colors
 colors
 
-PROMPT="%F{blue}:%f %c/ 
-%# "
+PROMPT=$'%F{blue}:%f %c/\n%# '
 
 # vcs_info
 autoload -Uz vcs_info
@@ -19,20 +17,28 @@ autoload -Uz add-zsh-hook
  
 zstyle ':vcs_info:*' formats '%F{green}(%s)-[%b]%f'
 zstyle ':vcs_info:*' actionformats '%F{red}(%s)-[%b|%a]%f'
+zstyle ':vcs_info:*' enable git
  
 function _update_vcs_info_msg() {
     LANG=en_US.UTF-8 vcs_info
+    # shellcheck disable=SC2034,SC2154
     RPROMPT="${vcs_info_msg_0_}"
 }
 
 add-zsh-hook precmd _update_vcs_info_msg
 
-if [ -f "$(brew --prefix)/share/kube-ps1.sh" ]; then 
+if [ -f "$(brew --prefix)/share/kube-ps1.sh" ]; then
     ## if you want to customize, please edit `~/.kube/config`
     set +u
+    export KUBECONFIG=${KUBECONFIG:-$HOME/.kube/config}
+    export KUBE_PS1_CONTEXT=${KUBE_PS1_CONTEXT:-}
+    export KUBE_PS1_ENABLED=true
+    # shellcheck disable=SC2034
     KUBE_PS1_SYMBOL_USE_IMG=true
     source "$(brew --prefix)/share/kube-ps1.sh"
-    PS1='$(kube_ps1) '$PS1
+    set -u
+    # shellcheck disable=SC2016
+    PROMPT='$(kube_ps1) '"$PROMPT"
 fi
 
 # setopt
@@ -42,6 +48,7 @@ setopt nolistbeep
 # history
 HISTFILE="${HOME}/.zsh_history"
 HISTSIZE=100000
+# shellcheck disable=SC2034
 SAVEHIST=1000000
 setopt inc_append_history
 setopt share_history
@@ -55,23 +62,28 @@ compinit
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
 
 # k8s
-source <(kubectl completion zsh)
+if type kubectl >/dev/null 2>&1; then
+    source <(kubectl completion zsh)
+fi
 
-source <(kwokctl completion zsh)
-compdef _kwokctl kwokctl
-
-# helm
-source <(helm completion zsh)
+if type kwokctl >/dev/null 2>&1; then
+    source <(kwokctl completion zsh)
+    compdef _kwokctl kwokctl
+fi
 
 # helmfile
-source <(helmfile completion zsh)
+if type helmfile >/dev/null 2>&1; then
+    source <(helmfile completion zsh)
+fi
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C terraform terraform
 
 # cloud-sql-proxy-v2-operator
-source <(cloud-sql-proxy-v2-operator completion zsh)
-compdef _cloud-sql-proxy-v2-operator cloud-sql-proxy-v2-operator
+if type cloud-sql-proxy-v2-operator >/dev/null 2>&1; then
+    source <(cloud-sql-proxy-v2-operator completion zsh)
+    compdef _cloud-sql-proxy-v2-operator cloud-sql-proxy-v2-operator
+fi
 
 # any-connect
 if (type any-connect > /dev/null 2>&1); then
