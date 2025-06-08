@@ -3,6 +3,12 @@ description:
 globs:
 alwaysApply: false
 ---
+---
+id: commit-message
+enabled: true
+when:
+  operation: generateGitCommitMessage
+---
 # コミットメッセージ生成ルール
 
 あなたはプロのソフトウェアエンジニアです。リポジトリの変更差分を分析し、以下のルールに従って最適なコミットメッセージを日本語で生成してください。

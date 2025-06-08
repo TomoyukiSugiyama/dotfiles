@@ -21,6 +21,7 @@ zstyle ':vcs_info:*' enable git
  
 function _update_vcs_info_msg() {
     LANG=en_US.UTF-8 vcs_info
+    # shellcheck disable=SC2034,SC2154
     RPROMPT="${vcs_info_msg_0_}"
 }
 
@@ -32,9 +33,11 @@ if [ -f "$(brew --prefix)/share/kube-ps1.sh" ]; then
     export KUBECONFIG=${KUBECONFIG:-$HOME/.kube/config}
     export KUBE_PS1_CONTEXT=${KUBE_PS1_CONTEXT:-}
     export KUBE_PS1_ENABLED=true
+    # shellcheck disable=SC2034
     KUBE_PS1_SYMBOL_USE_IMG=true
     source "$(brew --prefix)/share/kube-ps1.sh"
     set -u
+    # shellcheck disable=SC2016
     PROMPT='$(kube_ps1) '"$PROMPT"
 fi
 
@@ -45,6 +48,7 @@ setopt nolistbeep
 # history
 HISTFILE="${HOME}/.zsh_history"
 HISTSIZE=100000
+# shellcheck disable=SC2034
 SAVEHIST=1000000
 setopt inc_append_history
 setopt share_history
