@@ -1,12 +1,12 @@
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use std::process::Command;
 use ratatui::{
     DefaultTerminal, Frame,
     style::Stylize,
     text::Line,
     widgets::{Block, Paragraph},
 };
+use std::process::Command;
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
@@ -83,7 +83,7 @@ impl App {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             // Add other key handlers here.
-            (_,KeyCode::Char('u')) => self.update_dotfiles(),
+            (_, KeyCode::Char('u')) => self.update_dotfiles(),
             _ => {}
         }
     }
