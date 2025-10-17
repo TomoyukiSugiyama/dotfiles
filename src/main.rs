@@ -1,5 +1,6 @@
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use std::process::Command;
 use ratatui::{
     DefaultTerminal, Frame,
     style::Stylize,
@@ -20,6 +21,7 @@ fn main() -> color_eyre::Result<()> {
 pub struct App {
     /// Is the application running?
     running: bool,
+    log: String,
 }
 
 impl App {
@@ -52,12 +54,12 @@ impl App {
         let text = "Hello, Ratatui!\n\n\
             Created using https://github.com/ratatui/templates\n\
             Press `Esc`, `Ctrl-C` or `q` to stop running.";
+
         frame.render_widget(
-            Paragraph::new(text)
-                .block(Block::bordered().title(title))
-                .centered(),
+            Paragraph::new(Line::from("Log:".to_string() + &self.log.clone()))
+                .block(Block::bordered().title("Log")),
             frame.area(),
-        )
+        );
     }
 
     /// Reads the crossterm events and updates the state of [`App`].
@@ -81,6 +83,7 @@ impl App {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             // Add other key handlers here.
+            (_,KeyCode::Char('u')) => self.update_dotfiles(),
             _ => {}
         }
     }
@@ -88,5 +91,21 @@ impl App {
     /// Set running to false to quit the application.
     fn quit(&mut self) {
         self.running = false;
+    }
+
+    fn update_dotfiles(&mut self) {
+        println!("Updating dotfiles...");
+        self.log = String::new();
+
+        let output = Command::new("git")
+            .arg("pull")
+            .arg("-r")
+            .arg("--autostash")
+            .output()
+            .expect("Failed to update dotfiles");
+        self.log = String::from_utf8_lossy(&output.stdout).to_string();
+        self.log += "\n";
+        self.log += &String::from_utf8_lossy(&output.stderr).to_string();
+        self.log += "\n";
     }
 }
