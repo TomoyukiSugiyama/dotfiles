@@ -14,7 +14,8 @@ use ratatui::{
         Widget,
     },
 };
-use std::process::Command;
+use std::{process::Command, time::Duration};
+use tokio::{runtime::Runtime, sync::mpsc, task};
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
@@ -25,12 +26,14 @@ fn main() -> color_eyre::Result<()> {
 }
 
 /// The main application which holds the state and logic of the application.
-#[derive(Debug, Default)]
 struct App {
     /// Is the application running?
     running: bool,
     menu: Menu,
     log: String,
+    runtime: Runtime,
+    log_sender: mpsc::UnboundedSender<String>,
+    log_receiver: mpsc::UnboundedReceiver<String>,
 }
 
 #[derive(Debug, Default)]
@@ -92,6 +95,8 @@ impl Widget for &mut App {
 impl App {
     /// Construct a new instance of [`App`].
     pub fn new() -> Self {
+        let runtime = Runtime::new().expect("failed to start tokio runtime");
+        let (log_sender, log_receiver) = mpsc::unbounded_channel();
         Self {
             running: true,
             menu: Menu::from_iter([
@@ -102,6 +107,9 @@ impl App {
                 ("Quit".to_string(), Some(MenuItemAction::Quit)),
             ]),
             log: String::new(),
+            runtime,
+            log_sender,
+            log_receiver,
         }
     }
 
@@ -109,6 +117,7 @@ impl App {
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
         while self.running {
+            self.drain_log_messages();
             terminal.draw(|frame| frame.render_widget(&mut self, frame.area()))?;
             self.handle_crossterm_events()?;
         }
@@ -173,12 +182,14 @@ impl App {
     /// If your application needs to perform work in between handling events, you can use the
     /// [`event::poll`] function to check if there are any events available with a timeout.
     fn handle_crossterm_events(&mut self) -> Result<()> {
-        match event::read()? {
-            // it's important to check KeyEventKind::Press to avoid handling key release events
-            Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
-            Event::Mouse(_) => {}
-            Event::Resize(_, _) => {}
-            _ => {}
+        if event::poll(Duration::from_millis(50))? {
+            match event::read()? {
+                // it's important to check KeyEventKind::Press to avoid handling key release events
+                Event::Key(key) if key.kind == KeyEventKind::Press => self.on_key_event(key),
+                Event::Mouse(_) => {}
+                Event::Resize(_, _) => {}
+                _ => {}
+            }
         }
         Ok(())
     }
@@ -220,13 +231,14 @@ impl App {
     }
 
     fn execute_selected(&mut self) {
-        let selected_index = self.menu.state.selected().unwrap();
-        let item = &self.menu.items[selected_index];
-        match item.action {
-            Some(MenuItemAction::UpdateDotfiles) => self.update_dotfiles(),
-            Some(MenuItemAction::Quit) => self.quit(),
-            None => {}
-        };
+        if let Some(selected_index) = self.menu.state.selected() {
+            let item = &self.menu.items[selected_index];
+            match item.action {
+                Some(MenuItemAction::UpdateDotfiles) => self.update_dotfiles(),
+                Some(MenuItemAction::Quit) => self.quit(),
+                None => {}
+            };
+        }
     }
 
     /// Set running to false to quit the application.
@@ -235,12 +247,45 @@ impl App {
     }
 
     fn update_dotfiles(&mut self) {
-        let output = Command::new("git")
-            .arg("pull")
-            .arg("-r")
-            .arg("--autostash")
-            .output()
-            .expect("Failed to update dotfiles");
-        self.log = String::from_utf8(output.stdout).unwrap();
+        self.log.push_str("Updating dotfiles...\n");
+        let sender = self.log_sender.clone();
+        self.runtime.spawn(async move {
+            let output_result = task::spawn_blocking(|| {
+                Command::new("git")
+                    .arg("pull")
+                    .arg("-r")
+                    .arg("--autostash")
+                    .output()
+            })
+            .await;
+
+            match output_result {
+                Ok(Ok(output)) => {
+                    let mut message = String::new();
+                    if !output.stdout.is_empty() {
+                        message.push_str(&String::from_utf8_lossy(&output.stdout));
+                    }
+                    if !output.stderr.is_empty() {
+                        message.push_str(&String::from_utf8_lossy(&output.stderr));
+                    }
+                    if message.is_empty() {
+                        message.push_str("Update completed.\n");
+                    }
+                    let _ = sender.send(message);
+                }
+                Ok(Err(err)) => {
+                    let _ = sender.send(format!("Failed to update dotfiles: {err}\n"));
+                }
+                Err(err) => {
+                    let _ = sender.send(format!("Update task panicked: {err}\n"));
+                }
+            }
+        });
+    }
+
+    fn drain_log_messages(&mut self) {
+        while let Ok(message) = self.log_receiver.try_recv() {
+            self.log.push_str(&message);
+        }
     }
 }
