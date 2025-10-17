@@ -47,17 +47,18 @@ impl App {
     /// - <https://docs.rs/ratatui/latest/ratatui/widgets/index.html>
     /// - <https://github.com/ratatui/ratatui/tree/main/ratatui-widgets/examples>
     fn render(&mut self, frame: &mut Frame) {
-        let title = Line::from("Ratatui Simple Template")
+        let title = Line::from("Dotfiles Manager")
             .bold()
             .blue()
             .centered();
-        let text = "Hello, Ratatui!\n\n\
-            Created using https://github.com/ratatui/templates\n\
-            Press `Esc`, `Ctrl-C` or `q` to stop running.";
+        let text = "Hello, Dotfiles!\n\n\
+            Created using https://github.com/tomoyukisugiyama/dotfiles\n\
+            Press `Esc`, `Ctrl-C` or `q` to stop running.\n\
+            Press `u` to update dotfiles.\n\n";
 
         frame.render_widget(
-            Paragraph::new(Line::from("Log:".to_string() + &self.log.clone()))
-                .block(Block::bordered().title("Log")),
+            Paragraph::new(text.to_string() + &self.log.clone())
+                .block(Block::bordered().title(title)),
             frame.area(),
         );
     }
@@ -94,8 +95,7 @@ impl App {
     }
 
     fn update_dotfiles(&mut self) {
-        println!("Updating dotfiles...");
-        self.log = String::new();
+        self.log = "Updating dotfiles...\n".to_string();
 
         let output = Command::new("git")
             .arg("pull")
