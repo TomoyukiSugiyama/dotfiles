@@ -2,12 +2,17 @@ use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{
     DefaultTerminal,
-    layout::Rect,
-    widgets::{Block, List, ListItem, ListState, StatefulWidget, HighlightSpacing, Widget, Borders},
-    symbols,
-    style::{Style, Modifier},
     buffer::Buffer,
-    style::{palette::tailwind::{SLATE, BLUE},},
+    layout::Rect,
+    layout::{Constraint, Layout},
+    style::palette::tailwind::SLATE,
+    style::{Color, Modifier, Style},
+    symbols::{self},
+    text::Line,
+    widgets::{
+        Block, Borders, HighlightSpacing, List, ListItem, ListState, Paragraph, StatefulWidget,
+        Widget,
+    },
 };
 use std::process::Command;
 
@@ -25,6 +30,7 @@ struct App {
     /// Is the application running?
     running: bool,
     menu: Menu,
+    log: String,
 }
 
 #[derive(Debug, Default)]
@@ -36,12 +42,31 @@ struct Menu {
 #[derive(Debug, Default)]
 struct MenuItem {
     title: String,
+    action: Option<MenuItemAction>,
 }
 
-impl FromIterator<String> for Menu {
-    fn from_iter<T>(iter: T) -> Self where T: IntoIterator<Item = String> {
-        let items = iter.into_iter().map(|title| MenuItem { title: title }).collect();
-        Self { items: items, state: ListState::default() }
+#[derive(Debug)]
+enum MenuItemAction {
+    UpdateDotfiles,
+    Quit,
+}
+
+impl FromIterator<(String, Option<MenuItemAction>)> for Menu {
+    fn from_iter<T>(iter: T) -> Self
+    where
+        T: IntoIterator<Item = (String, Option<MenuItemAction>)>,
+    {
+        let items = iter
+            .into_iter()
+            .map(|(title, action)| MenuItem {
+                title: title,
+                action: action,
+            })
+            .collect();
+        Self {
+            items: items,
+            state: ListState::default(),
+        }
     }
 }
 
@@ -49,18 +74,34 @@ const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier:
 
 impl Widget for &mut App {
     fn render(self, area: Rect, buffer: &mut Buffer) {
-        self.render(area, buffer);
+        let [header_area, footer_area, menu_area, log_area] = Layout::vertical([
+            Constraint::Percentage(5),
+            Constraint::Percentage(5),
+            Constraint::Percentage(30),
+            Constraint::Percentage(60),
+        ])
+        .areas(area);
+
+        self.render_header(header_area, buffer);
+        self.render_footer(footer_area, buffer);
+        self.render_log(log_area, buffer);
+        self.render_menu(menu_area, buffer);
     }
 }
+
 impl App {
     /// Construct a new instance of [`App`].
     pub fn new() -> Self {
         Self {
             running: true,
             menu: Menu::from_iter([
-                "Update Dotfiles".to_string(),
-                "Quit".to_string(),
+                (
+                    "Update Dotfiles".to_string(),
+                    Some(MenuItemAction::UpdateDotfiles),
+                ),
+                ("Quit".to_string(), Some(MenuItemAction::Quit)),
             ]),
+            log: String::new(),
         }
     }
 
@@ -74,13 +115,34 @@ impl App {
         Ok(())
     }
 
+    fn render_header(&mut self, area: Rect, buffer: &mut Buffer) {
+        Paragraph::new("Dotfiles Manager")
+            .centered()
+            .render(area, buffer);
+    }
+    fn render_footer(&mut self, area: Rect, buffer: &mut Buffer) {
+        Paragraph::new("Use ↓↑ to move, ← to unselect, → to select, Home/End to go top/bottom.")
+            .centered()
+            .render(area, buffer);
+    }
+
+    fn render_log(&mut self, area: Rect, buffer: &mut Buffer) {
+        let block = Block::new()
+            .title(Line::from("Log"))
+            .borders(Borders::ALL)
+            .border_set(symbols::border::PLAIN)
+            .border_style(Style::new().fg(Color::Black));
+        Paragraph::new(Line::from(self.log.clone()))
+            .block(block)
+            .render(area, buffer);
+    }
     /// Renders the user interface.
     ///
     /// This is where you add new widgets. See the following resources for more information:
     ///
     /// - <https://docs.rs/ratatui/latest/ratatui/widgets/index.html>
     /// - <https://github.com/ratatui/ratatui/tree/main/ratatui-widgets/examples>
-    fn render(&mut self, area: Rect, buffer: &mut Buffer) {
+    fn render_menu(&mut self, area: Rect, buffer: &mut Buffer) {
         // let title = Line::from("Dotfiles Manager").bold().blue().centered();
         // let text = "Hello, Dotfiles!\n\n\
         //     Created using https://github.com/tomoyukisugiyama/dotfiles\n\
@@ -88,16 +150,21 @@ impl App {
         //     Press `u` to update dotfiles.\n\n";
 
         let block = Block::new()
-        .title("Dotfiles Manager")
-        .borders(Borders::TOP)
-        .border_set(symbols::border::EMPTY)
-        .border_style(Style::new().fg(SLATE.c100).bg(BLUE.c800));
-        let items = self.menu.items.iter().map(|item| ListItem::new(item.title.clone())).collect::<Vec<ListItem>>();
+            .title(Line::from("Menu"))
+            .borders(Borders::ALL)
+            .border_set(symbols::border::PLAIN)
+            .border_style(Style::new().fg(Color::Black));
+        let items = self
+            .menu
+            .items
+            .iter()
+            .map(|item| ListItem::new(item.title.clone()))
+            .collect::<Vec<ListItem>>();
         let list = List::new(items)
-        .block(block)
-        .highlight_style(SELECTED_STYLE)
-        .highlight_symbol("> ")
-        .highlight_spacing(HighlightSpacing::Always);
+            .block(block)
+            .highlight_style(SELECTED_STYLE)
+            .highlight_symbol("> ")
+            .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(list, area, buffer, &mut self.menu.state);
     }
 
@@ -122,11 +189,12 @@ impl App {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             // Add other key handlers here.
-            (_, KeyCode::Char('u')) => self.update_dotfiles(),
             (_, KeyCode::Home) => self.select_first(),
             (_, KeyCode::End) => self.select_last(),
             (_, KeyCode::Up) => self.select_previous(),
             (_, KeyCode::Down) => self.select_next(),
+            (_, KeyCode::Enter | KeyCode::Right) => self.execute_selected(),
+            (_, KeyCode::Left) => self.unselect(),
             _ => {}
         }
     }
@@ -147,6 +215,20 @@ impl App {
         self.menu.state.select_next();
     }
 
+    fn unselect(&mut self) {
+        self.menu.state.select(None);
+    }
+
+    fn execute_selected(&mut self) {
+        let selected_index = self.menu.state.selected().unwrap();
+        let item = &self.menu.items[selected_index];
+        match item.action {
+            Some(MenuItemAction::UpdateDotfiles) => self.update_dotfiles(),
+            Some(MenuItemAction::Quit) => self.quit(),
+            None => {}
+        };
+    }
+
     /// Set running to false to quit the application.
     fn quit(&mut self) {
         self.running = false;
@@ -159,6 +241,6 @@ impl App {
             .arg("--autostash")
             .output()
             .expect("Failed to update dotfiles");
-        println!("output: {:?}", output);
+        self.log = String::from_utf8(output.stdout).unwrap();
     }
 }
