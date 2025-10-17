@@ -1,0 +1,12 @@
+[package]
+name = "dotfiles"
+version = "0.1.0"
+description = "manage dotfiles"
+authors = ["TomoyukiSugiyama <s_tomoyuki07@yahoo.co.jp>"]
+license = "MIT"
+edition = "2024"
+
+[dependencies]
+crossterm = "0.28.1"
+ratatui = "0.29.0"
+color-eyre = "0.6.3"
