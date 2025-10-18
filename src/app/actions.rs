@@ -15,6 +15,30 @@ impl App {
             };
         }
     }
+    pub fn scroll_log(&mut self, amount: i16) {
+        if self.log_lines.is_empty() {
+            return;
+        }
+        if self.log_scroll == (self.log_lines.len() as u16 - self.view_height as u16) && amount > 0 {
+            return;
+        }
+        if self.log_scroll == 0 && amount < 0 {
+            return;
+        }
+
+        self.log_scroll = if amount < 0 {
+            self.log_scroll.saturating_sub(amount.abs() as u16)
+        } else {
+            self.log_scroll.saturating_add(amount.abs() as u16)
+        };
+    }
+
+    pub fn scroll_log_to_bottom(&mut self) {
+        self.log_scroll = self.log_lines.len() as u16 - self.view_height as u16;
+    }
+    pub fn scroll_log_to_top(&mut self) {
+        self.log_scroll = 0;
+    }
 
     /// Set running to false to quit the application.
     pub(crate) fn quit(&mut self) {

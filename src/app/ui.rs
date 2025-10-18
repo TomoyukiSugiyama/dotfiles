@@ -93,8 +93,8 @@ impl Widget for &mut App {
         let [header_area, footer_area, menu_area, log_area] = Layout::vertical([
             Constraint::Percentage(5),
             Constraint::Percentage(5),
-            Constraint::Percentage(30),
-            Constraint::Percentage(60),
+            Constraint::Percentage(10),
+            Constraint::Percentage(80),
         ])
         .areas(area);
 
