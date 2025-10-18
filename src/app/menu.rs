@@ -2,14 +2,14 @@ use ratatui::widgets::ListState;
 
 #[derive(Debug, Default)]
 pub(crate) struct Menu {
-    pub state: ListState,
-    pub items: Vec<MenuItem>,
+    pub(crate) state: ListState,
+    pub(crate) items: Vec<MenuItem>,
 }
 
 #[derive(Debug, Default)]
 pub(crate) struct MenuItem {
-    pub title: String,
-    pub action: Option<MenuItemAction>,
+    pub(crate) title: String,
+    pub(crate) action: Option<MenuItemAction>,
 }
 
 #[derive(Debug)]

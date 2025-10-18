@@ -7,7 +7,7 @@ use tokio::{
 };
 
 
-pub async fn forward_stream<R>(
+pub(crate) async fn forward_stream<R>(
     reader: R,
     sender: mpsc::UnboundedSender<String>,
     label: &'static str,
