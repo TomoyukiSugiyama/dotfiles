@@ -1,8 +1,8 @@
-mod tools;
-mod logging;
 mod app;
+mod logging;
+mod tools;
 
-use app::{App};
+use app::App;
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
@@ -12,5 +12,3 @@ fn main() -> color_eyre::Result<()> {
     ratatui::restore();
     result
 }
-
-

@@ -1,17 +1,34 @@
 use super::App;
 use ratatui::{
     buffer::Buffer,
-    layout::{Rect, Constraint, Layout},
-    widgets::{Block, Borders, Paragraph, List, ListItem, HighlightSpacing, StatefulWidget, Widget},
-    text::Line,
-    style::Style,
-    symbols,
-    style::Modifier,
+    layout::{Constraint, Layout, Rect},
     style::Color,
+    style::Modifier,
+    style::Style,
     style::palette::tailwind::SLATE,
+    symbols,
+    text::Line,
+    widgets::{
+        Block, Borders, HighlightSpacing, List, ListItem, Paragraph, StatefulWidget, Widget,
+    },
 };
 
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ViewTab {
+    Menu,
+    Log,
+}
+
+impl ViewTab {
+    pub fn next(self) -> Self {
+        match self {
+            ViewTab::Menu => ViewTab::Log,
+            ViewTab::Log => ViewTab::Menu,
+        }
+    }
+}
 
 impl App {
     fn render_header(&mut self, area: Rect, buffer: &mut Buffer) {
@@ -25,12 +42,16 @@ impl App {
             .render(area, buffer);
     }
 
-    fn render_log(&mut self, area: Rect, buffer: &mut Buffer) {
-        let block = Block::new()
+    fn render_log(&mut self, area: Rect, buffer: &mut Buffer, focused: bool) {
+        let mut block = Block::new()
             .title(Line::from("Log"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::Black));
+        if focused {
+            block = block.border_style(Style::new().fg(Color::Yellow));
+        }
+
         self.view_height = area.height as usize;
         let text: String = self
             .log_lines
@@ -42,14 +63,16 @@ impl App {
         Paragraph::new(text).block(block).render(area, buffer);
     }
 
-
-    fn render_menu(&mut self, area: Rect, buffer: &mut Buffer) {
-
-        let block = Block::new()
+    fn render_menu(&mut self, area: Rect, buffer: &mut Buffer, focused: bool) {
+        let mut block = Block::new()
             .title(Line::from("Menu"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::Black));
+        if focused {
+            block = block.border_style(Style::new().fg(Color::Yellow));
+        }
+
         let items = self
             .menu
             .items
@@ -63,8 +86,6 @@ impl App {
             .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(list, area, buffer, &mut self.menu.state);
     }
-
-
 }
 
 impl Widget for &mut App {
@@ -79,7 +100,7 @@ impl Widget for &mut App {
 
         self.render_header(header_area, buffer);
         self.render_footer(footer_area, buffer);
-        self.render_log(log_area, buffer);
-        self.render_menu(menu_area, buffer);
+        self.render_log(log_area, buffer, self.view == ViewTab::Log);
+        self.render_menu(menu_area, buffer, self.view == ViewTab::Menu);
     }
 }

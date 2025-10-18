@@ -2,10 +2,7 @@ use tokio::sync::mpsc;
 
 use super::app::App;
 
-use tokio::{
-    io::{AsyncBufReadExt, AsyncRead, BufReader},
-};
-
+use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 
 pub(crate) async fn forward_stream<R>(
     reader: R,

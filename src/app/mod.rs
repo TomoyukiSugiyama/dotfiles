@@ -1,14 +1,15 @@
+mod actions;
+mod events;
 mod menu;
 mod ui;
-mod events;
-mod actions;
 
+use color_eyre::Result;
+use menu::{Menu, MenuItemAction};
+use ratatui::DefaultTerminal;
 use std::collections::VecDeque;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
-use menu::{Menu, MenuItemAction};
-use ratatui::DefaultTerminal;
-use color_eyre::Result;
+use ui::ViewTab;
 
 pub(crate) struct App {
     /// Is the application running?
@@ -21,6 +22,7 @@ pub(crate) struct App {
     pub log_lines: VecDeque<String>,
     pub log_scroll: u16,
     pub view_height: usize,
+    pub view: ViewTab,
 }
 
 impl App {
@@ -44,6 +46,7 @@ impl App {
             log_lines: VecDeque::new(),
             log_scroll: 0,
             view_height: 0,
+            view: ViewTab::Menu,
         }
     }
 

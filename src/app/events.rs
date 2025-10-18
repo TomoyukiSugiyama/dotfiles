@@ -1,7 +1,7 @@
 use super::App;
+use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use std::time::Duration;
-use color_eyre::Result;
 
 impl App {
     /// Reads the crossterm events and updates the state of [`App`].
@@ -33,6 +33,7 @@ impl App {
             (_, KeyCode::Down) => self.select_next(),
             (_, KeyCode::Enter | KeyCode::Right) => self.execute_selected(),
             (_, KeyCode::Left) => self.unselect(),
+            (_, KeyCode::Tab) => self.select_next_view(),
             _ => {}
         }
     }
@@ -55,5 +56,9 @@ impl App {
 
     fn unselect(&mut self) {
         self.menu.state.select(None);
+    }
+
+    fn select_next_view(&mut self) {
+        self.view = self.view.next();
     }
 }

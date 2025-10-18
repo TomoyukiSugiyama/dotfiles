@@ -1,9 +1,8 @@
-
 use super::App;
 use super::menu::MenuItemAction;
-use tokio::process::Command as TokioCommand;
-use std::process::Stdio;
 use crate::logging::forward_stream;
+use std::process::Stdio;
+use tokio::process::Command as TokioCommand;
 
 impl App {
     pub(crate) fn execute_selected(&mut self) {
