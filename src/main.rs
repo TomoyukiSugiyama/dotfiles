@@ -46,7 +46,7 @@ use ratatui::{
         Widget,
     },
 };
-use std::{process::Stdio, time::Duration};
+use std::{collections::VecDeque, process::Stdio, time::Duration};
 use tokio::process::Command as TokioCommand;
 use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
@@ -68,11 +68,13 @@ struct App {
     /// Is the application running?
     running: bool,
     menu: Menu,
-    log: String,
     runtime: Runtime,
     log_sender: mpsc::UnboundedSender<String>,
     log_receiver: mpsc::UnboundedReceiver<String>,
     tools: tools::Tools,
+    log_lines: VecDeque<String>,
+    log_scroll: u16,
+    view_height: usize,
 }
 
 #[derive(Debug, Default)]
@@ -92,6 +94,8 @@ enum MenuItemAction {
     UpdateDotfiles,
     Quit,
 }
+
+const MAX_LOG_LINES: usize = 1000;
 
 impl FromIterator<(String, Option<MenuItemAction>)> for Menu {
     fn from_iter<T>(iter: T) -> Self
@@ -146,11 +150,13 @@ impl App {
                 ),
                 ("Quit".to_string(), Some(MenuItemAction::Quit)),
             ]),
-            log: String::new(),
             runtime,
             log_sender,
             log_receiver,
             tools,
+            log_lines: VecDeque::new(),
+            log_scroll: 0,
+            view_height: 0,
         }
     }
 
@@ -182,9 +188,15 @@ impl App {
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::Black));
-        Paragraph::new(self.log.clone())
-            .block(block)
-            .render(area, buffer);
+        self.view_height = area.height as usize;
+        let text: String = self
+            .log_lines
+            .iter()
+            .skip(self.log_scroll as usize)
+            .take(self.view_height)
+            .cloned()
+            .collect();
+        Paragraph::new(text).block(block).render(area, buffer);
     }
     /// Renders the user interface.
     ///
@@ -288,7 +300,7 @@ impl App {
     }
 
     fn update_dotfiles(&mut self) {
-        self.log.push_str("Updating dotfiles...\n");
+        let _ = self.log_sender.send("Updating dotfiles...\n".to_string());
 
         for tool in self.tools.items.iter() {
             let sender = self.log_sender.clone();
@@ -341,7 +353,11 @@ impl App {
 
     fn drain_log_messages(&mut self) {
         while let Ok(message) = self.log_receiver.try_recv() {
-            self.log.push_str(&message);
+            if self.log_lines.len() >= MAX_LOG_LINES {
+                self.log_lines.pop_front();
+            }
+            self.log_lines.push_back(message);
+            self.log_scroll = self.log_lines.len().saturating_sub(self.view_height) as u16;
         }
     }
 }
