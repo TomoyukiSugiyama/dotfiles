@@ -9,7 +9,7 @@ use ratatui::DefaultTerminal;
 use std::collections::VecDeque;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
-use ui::ViewTab;
+use ui::{SelectedTab, ViewTab};
 
 pub(crate) struct App {
     /// Is the application running?
@@ -23,6 +23,7 @@ pub(crate) struct App {
     pub log_scroll: u16,
     pub view_height: usize,
     pub view: ViewTab,
+    pub selected_tab: SelectedTab,
 }
 
 impl App {
@@ -47,6 +48,7 @@ impl App {
             log_scroll: 0,
             view_height: 0,
             view: ViewTab::Menu,
+            selected_tab: SelectedTab::Execute,
         }
     }
 

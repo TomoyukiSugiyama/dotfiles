@@ -30,6 +30,26 @@ impl ViewTab {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SelectedTab {
+    Dotfiles,
+    Execute,
+}
+
+impl SelectedTab {
+    pub fn next(self) -> Self {
+        match self {
+            SelectedTab::Dotfiles => SelectedTab::Execute,
+            SelectedTab::Execute => SelectedTab::Dotfiles,
+        }
+    }
+    pub fn previous(self) -> Self {
+        match self {
+            SelectedTab::Dotfiles => SelectedTab::Execute,
+            SelectedTab::Execute => SelectedTab::Dotfiles,
+        }
+    }
+}
 impl App {
     fn render_header(&mut self, area: Rect, buffer: &mut Buffer) {
         Paragraph::new("Dotfiles Manager")
