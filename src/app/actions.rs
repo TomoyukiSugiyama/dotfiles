@@ -15,7 +15,7 @@ impl App {
             };
         }
     }
-    pub fn scroll_log(&mut self, amount: i16) {
+    pub(crate) fn scroll_log(&mut self, amount: i16) {
         if self.log_lines.is_empty() {
             return;
         }
@@ -35,10 +35,10 @@ impl App {
         };
     }
 
-    pub fn scroll_log_to_bottom(&mut self) {
-        self.log_scroll = self.log_lines.len() as u16 - self.view_height as u16;
+    pub(crate) fn scroll_log_to_bottom(&mut self) {
+        self.log_scroll = self.log_lines.len().saturating_sub(self.view_height) as u16;
     }
-    pub fn scroll_log_to_top(&mut self) {
+    pub(crate) fn scroll_log_to_top(&mut self) {
         self.log_scroll = 0;
     }
 
@@ -52,7 +52,7 @@ impl App {
 
         for tool in self.tools.items.iter() {
             let sender = self.log_sender.clone();
-            let file = format!("{}/{}/{}", self.tools.root, tool.root, tool.file);
+            let file = self.tools.file_path(tool);
             let _ = sender.send(format!("Updating {}\n", tool.name));
             let _ = sender.send(format!("Running {}\n", file));
             self.runtime.spawn(async move {

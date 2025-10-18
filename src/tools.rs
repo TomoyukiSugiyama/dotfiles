@@ -20,4 +20,8 @@ impl Tools {
             }],
         }
     }
+
+    pub(crate) fn file_path(&self, tool: &ToolItem) -> String {
+        format!("{}/{}/{}", self.root, tool.root, tool.file)
+    }
 }
