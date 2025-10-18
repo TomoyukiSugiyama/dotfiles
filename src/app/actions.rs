@@ -19,7 +19,8 @@ impl App {
         if self.log_lines.is_empty() {
             return;
         }
-        if self.log_scroll == (self.log_lines.len() as u16 - self.view_height as u16) && amount > 0 {
+        if self.log_scroll == (self.log_lines.len() as u16 - self.view_height as u16) && amount > 0
+        {
             return;
         }
         if self.log_scroll == 0 && amount < 0 {

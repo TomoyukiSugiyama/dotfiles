@@ -28,10 +28,34 @@ impl App {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             // Add other key handlers here.
-            (_, KeyCode::Home) => if self.view == ViewTab::Menu { self.select_first() } else { self.scroll_log_to_top() },
-            (_, KeyCode::End) => if self.view == ViewTab::Menu { self.select_last() } else { self.scroll_log_to_bottom() },
-            (_, KeyCode::Up) => if self.view == ViewTab::Menu { self.select_previous() } else { self.scroll_log(-1) },
-            (_, KeyCode::Down) => if self.view == ViewTab::Menu { self.select_next() } else { self.scroll_log(1) },
+            (_, KeyCode::Home) => {
+                if self.view == ViewTab::Menu {
+                    self.select_first()
+                } else {
+                    self.scroll_log_to_top()
+                }
+            }
+            (_, KeyCode::End) => {
+                if self.view == ViewTab::Menu {
+                    self.select_last()
+                } else {
+                    self.scroll_log_to_bottom()
+                }
+            }
+            (_, KeyCode::Up) => {
+                if self.view == ViewTab::Menu {
+                    self.select_previous()
+                } else {
+                    self.scroll_log(-1)
+                }
+            }
+            (_, KeyCode::Down) => {
+                if self.view == ViewTab::Menu {
+                    self.select_next()
+                } else {
+                    self.scroll_log(1)
+                }
+            }
             (_, KeyCode::Enter | KeyCode::Right) => self.execute_selected(),
             (_, KeyCode::Left) => self.unselect(),
             (_, KeyCode::Tab) => self.select_next_view(),
