@@ -1,3 +1,35 @@
+async fn forward_stream<R>(
+    reader: R,
+    sender: mpsc::UnboundedSender<String>,
+    label: &'static str,
+    prefix: &str,
+) where
+    R: AsyncRead + Unpin,
+{
+    let mut reader = BufReader::new(reader);
+    let mut line = String::new();
+
+    loop {
+        line.clear();
+        match reader.read_line(&mut line).await {
+            Ok(0) => {
+                if !line.is_empty() {
+                    let _ = sender.send(format!("{}{}", prefix, line));
+                }
+                break;
+            }
+            Ok(_) => {
+                let _ = sender.send(format!("{}{}", prefix, line));
+            }
+            Err(e) => {
+                let _ = sender.send(format!("{} read error: {}\n", label, e));
+                break;
+            }
+        }
+    }
+}
+mod tools;
+
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{
@@ -14,11 +46,17 @@ use ratatui::{
         Widget,
     },
 };
-use std::{process::Command, time::Duration};
-use tokio::{runtime::Runtime, sync::mpsc, task};
+use std::{process::Stdio, time::Duration};
+use tokio::process::Command as TokioCommand;
+use tokio::{
+    io::{AsyncBufReadExt, AsyncRead, BufReader},
+    runtime::Runtime,
+    sync::mpsc,
+};
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
+
     let terminal = ratatui::init();
     let result = App::new().run(terminal);
     ratatui::restore();
@@ -34,6 +72,7 @@ struct App {
     runtime: Runtime,
     log_sender: mpsc::UnboundedSender<String>,
     log_receiver: mpsc::UnboundedReceiver<String>,
+    tools: tools::Tools,
 }
 
 #[derive(Debug, Default)]
@@ -95,6 +134,7 @@ impl Widget for &mut App {
 impl App {
     /// Construct a new instance of [`App`].
     pub fn new() -> Self {
+        let tools = tools::Tools::new();
         let runtime = Runtime::new().expect("failed to start tokio runtime");
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
         Self {
@@ -110,6 +150,7 @@ impl App {
             runtime,
             log_sender,
             log_receiver,
+            tools,
         }
     }
 
@@ -141,7 +182,7 @@ impl App {
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::Black));
-        Paragraph::new(Line::from(self.log.clone()))
+        Paragraph::new(self.log.clone())
             .block(block)
             .render(area, buffer);
     }
@@ -248,39 +289,54 @@ impl App {
 
     fn update_dotfiles(&mut self) {
         self.log.push_str("Updating dotfiles...\n");
-        let sender = self.log_sender.clone();
-        self.runtime.spawn(async move {
-            let output_result = task::spawn_blocking(|| {
-                Command::new("git")
-                    .arg("pull")
-                    .arg("-r")
-                    .arg("--autostash")
-                    .output()
-            })
-            .await;
 
-            match output_result {
-                Ok(Ok(output)) => {
-                    let mut message = String::new();
-                    if !output.stdout.is_empty() {
-                        message.push_str(&String::from_utf8_lossy(&output.stdout));
-                    }
-                    if !output.stderr.is_empty() {
-                        message.push_str(&String::from_utf8_lossy(&output.stderr));
-                    }
-                    if message.is_empty() {
-                        message.push_str("Update completed.\n");
-                    }
-                    let _ = sender.send(message);
+        for tool in self.tools.items.iter() {
+            let sender = self.log_sender.clone();
+            let file = format!("{}/{}/{}", self.tools.root, tool.root, tool.file);
+            let _ = sender.send(format!("Updating {}\n", tool.name));
+            let _ = sender.send(format!("Running {}\n", file));
+            self.runtime.spawn(async move {
+                let mut child = TokioCommand::new("zsh")
+                    .arg("-c")
+                    .arg(file)
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .expect("failed to spawn command");
+
+                let stdout_task = child.stdout.take().map(|stdout| {
+                    let sender = sender.clone();
+                    tokio::spawn(async move {
+                        forward_stream(stdout, sender, "stdout", "").await;
+                    })
+                });
+
+                let stderr_task = child.stderr.take().map(|stderr| {
+                    let sender = sender.clone();
+                    tokio::spawn(async move {
+                        forward_stream(stderr, sender, "stderr", "stderr: ").await;
+                    })
+                });
+
+                let status = child.wait().await;
+
+                if let Some(task) = stdout_task {
+                    let _ = task.await;
                 }
-                Ok(Err(err)) => {
-                    let _ = sender.send(format!("Failed to update dotfiles: {err}\n"));
+                if let Some(task) = stderr_task {
+                    let _ = task.await;
                 }
-                Err(err) => {
-                    let _ = sender.send(format!("Update task panicked: {err}\n"));
+
+                match status {
+                    Ok(status) => {
+                        let _ = sender.send(format!("Command exited with status: {}\n", status));
+                    }
+                    Err(e) => {
+                        let _ = sender.send(format!("Command failed with error: {}\n", e));
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     fn drain_log_messages(&mut self) {
