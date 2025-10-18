@@ -1,6 +1,7 @@
 mod actions;
 mod events;
 mod menu;
+mod tabs;
 mod ui;
 
 use color_eyre::Result;
@@ -9,7 +10,8 @@ use ratatui::DefaultTerminal;
 use std::collections::VecDeque;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
-use ui::{SelectedTab, ViewTab};
+use tabs::SelectedTab;
+use ui::ViewTab;
 
 pub(crate) struct App {
     /// Is the application running?

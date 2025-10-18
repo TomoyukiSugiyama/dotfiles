@@ -1,5 +1,6 @@
 use super::App;
-use super::ui::{SelectedTab, ViewTab};
+use super::tabs::SelectedTab;
+use super::ui::ViewTab;
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use std::time::Duration;

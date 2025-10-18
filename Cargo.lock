@@ -179,6 +179,7 @@ dependencies = [
  "color-eyre",
  "crossterm",
  "ratatui",
+ "strum",
  "tokio",
 ]
 

@@ -9,9 +9,11 @@ use ratatui::{
     symbols,
     text::Line,
     widgets::{
-        Block, Borders, HighlightSpacing, List, ListItem, Paragraph, StatefulWidget, Widget,
+        Block, Borders, HighlightSpacing, List, ListItem, Paragraph, StatefulWidget, Tabs, Widget,
     },
 };
+use super::tabs::SelectedTab;
+use strum::IntoEnumIterator;
 
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
 
@@ -30,34 +32,21 @@ impl ViewTab {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SelectedTab {
-    Dotfiles,
-    Execute,
-}
-
-impl SelectedTab {
-    pub fn next(self) -> Self {
-        match self {
-            SelectedTab::Dotfiles => SelectedTab::Execute,
-            SelectedTab::Execute => SelectedTab::Dotfiles,
-        }
-    }
-    pub fn previous(self) -> Self {
-        match self {
-            SelectedTab::Dotfiles => SelectedTab::Execute,
-            SelectedTab::Execute => SelectedTab::Dotfiles,
-        }
-    }
-}
 impl App {
-    fn render_header(&mut self, area: Rect, buffer: &mut Buffer) {
-        Paragraph::new("Dotfiles Manager")
+
+    fn render_footer(&mut self, area: Rect, buffer: &mut Buffer) {
+        Paragraph::new("Use ↓↑ to move, ← to unselect, → to select, Home/End to go top/bottom.")
             .centered()
             .render(area, buffer);
     }
-    fn render_footer(&mut self, area: Rect, buffer: &mut Buffer) {
-        Paragraph::new("Use ↓↑ to move, ← to unselect, → to select, Home/End to go top/bottom.")
+
+    fn render_tabs(&mut self, area: Rect, buffer: &mut Buffer) {
+        let titles = SelectedTab::iter().map(SelectedTab::title);
+        Tabs::new(titles).render(area, buffer);
+    }
+
+    fn render_title(&mut self, area: Rect, buffer: &mut Buffer) {
+        Paragraph::new("Dotfiles Manager")
             .centered()
             .render(area, buffer);
     }
@@ -110,15 +99,21 @@ impl App {
 
 impl Widget for &mut App {
     fn render(self, area: Rect, buffer: &mut Buffer) {
-        let [header_area, footer_area, menu_area, log_area] = Layout::vertical([
-            Constraint::Percentage(5),
+        let [header_area, menu_area, log_area,footer_area] = Layout::vertical([
             Constraint::Percentage(5),
             Constraint::Percentage(10),
             Constraint::Percentage(80),
+            Constraint::Percentage(5),
         ])
         .areas(area);
 
-        self.render_header(header_area, buffer);
+        let [tabs_area, title_area] = Layout::horizontal([
+            Constraint::Percentage(70),
+            Constraint::Percentage(30),
+        ]).areas(header_area);
+
+        self.render_tabs(tabs_area, buffer);
+        self.render_title(title_area, buffer);
         self.render_footer(footer_area, buffer);
         self.render_log(log_area, buffer, self.view == ViewTab::Log);
         self.render_menu(menu_area, buffer, self.view == ViewTab::Menu);
