@@ -1,5 +1,5 @@
-use ratatui::{widgets::Widget, layout::Rect, style::Color, text::Line, style::Style};
 use ratatui::buffer::Buffer;
+use ratatui::{layout::Rect, style::Color, style::Style, text::Line, widgets::Widget};
 use strum::{Display, EnumIter};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Display, EnumIter)]

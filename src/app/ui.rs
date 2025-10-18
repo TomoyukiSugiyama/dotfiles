@@ -1,4 +1,5 @@
 use super::App;
+use super::tabs::SelectedTab;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
@@ -12,7 +13,6 @@ use ratatui::{
         Block, Borders, HighlightSpacing, List, ListItem, Paragraph, StatefulWidget, Tabs, Widget,
     },
 };
-use super::tabs::SelectedTab;
 use strum::IntoEnumIterator;
 
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
@@ -33,7 +33,6 @@ impl ViewTab {
 }
 
 impl App {
-
     fn render_footer(&mut self, area: Rect, buffer: &mut Buffer) {
         Paragraph::new("Use ↓↑ to move, ← to unselect, → to select, Home/End to go top/bottom.")
             .centered()
@@ -99,7 +98,7 @@ impl App {
 
 impl Widget for &mut App {
     fn render(self, area: Rect, buffer: &mut Buffer) {
-        let [header_area, menu_area, log_area,footer_area] = Layout::vertical([
+        let [header_area, menu_area, log_area, footer_area] = Layout::vertical([
             Constraint::Percentage(5),
             Constraint::Percentage(10),
             Constraint::Percentage(80),
@@ -107,10 +106,9 @@ impl Widget for &mut App {
         ])
         .areas(area);
 
-        let [tabs_area, title_area] = Layout::horizontal([
-            Constraint::Percentage(70),
-            Constraint::Percentage(30),
-        ]).areas(header_area);
+        let [tabs_area, title_area] =
+            Layout::horizontal([Constraint::Percentage(70), Constraint::Percentage(30)])
+                .areas(header_area);
 
         self.render_tabs(tabs_area, buffer);
         self.render_title(title_area, buffer);

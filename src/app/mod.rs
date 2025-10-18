@@ -8,9 +8,9 @@ use color_eyre::Result;
 use menu::{Menu, MenuItemAction};
 use ratatui::DefaultTerminal;
 use std::collections::VecDeque;
+use tabs::SelectedTab;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
-use tabs::SelectedTab;
 use ui::ViewTab;
 
 pub(crate) struct App {
