@@ -32,10 +32,12 @@ impl ViewTab {
 
 impl Dotfiles {
     pub(crate) fn new() -> Self {
-        let tools_settings = ToolsSettings {
+        let mut tools_settings = ToolsSettings {
             state: ListState::default(),
             tools: Tools::new(),
         };
+        tools_settings.state.select_first();
+
         let preferences = Preferences {
             tools_settings: tools_settings,
         };

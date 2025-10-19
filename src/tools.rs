@@ -13,11 +13,18 @@ impl Tools {
     pub(crate) fn new() -> Self {
         Self {
             root: "~/.dotfiles".to_string(),
-            items: vec![ToolItem {
-                name: "Brew".to_string(),
-                root: "brew".to_string(),
-                file: "brew-settings.zsh".to_string(),
-            }],
+            items: vec![
+                ToolItem {
+                    name: "Brew".to_string(),
+                    root: "brew".to_string(),
+                    file: "brew-settings.zsh".to_string(),
+                },
+                ToolItem {
+                    name: "Gcloud".to_string(),
+                    root: "gcloud".to_string(),
+                    file: "gcloud-settings.zsh".to_string(),
+                },
+            ],
         }
     }
 

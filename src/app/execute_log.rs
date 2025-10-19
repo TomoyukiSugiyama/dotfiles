@@ -6,7 +6,7 @@ pub(crate) async fn forward_stream<R>(
     reader: R,
     sender: mpsc::UnboundedSender<String>,
     label: &'static str,
-    prefix: &str,
+    prefix: String,
 ) where
     R: AsyncRead + Unpin,
 {
@@ -18,12 +18,12 @@ pub(crate) async fn forward_stream<R>(
         match reader.read_line(&mut line).await {
             Ok(0) => {
                 if !line.is_empty() {
-                    let _ = sender.send(format!("{}{}", prefix, line));
+                    let _ = sender.send(format!("{}{}", prefix.as_str(), line));
                 }
                 break;
             }
             Ok(_) => {
-                let _ = sender.send(format!("{}{}", prefix, line));
+                let _ = sender.send(format!("{}{}", prefix.as_str(), line));
             }
             Err(e) => {
                 let _ = sender.send(format!("{} read error: {}\n", label, e));

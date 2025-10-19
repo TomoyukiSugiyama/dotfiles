@@ -47,58 +47,72 @@ impl Execute {
         for tool in self.tools.items.iter() {
             let sender = self.log_sender.clone();
             let file = self.tools.file_path(tool);
+            let tool_name = tool.name.clone();
             let _ = sender.send(format!("Updating {}\n", tool.name));
             let _ = sender.send(format!("Running {}\n", file));
-            self.runtime.spawn(async move {
-                let command = TokioCommand::new("zsh")
-                    .arg("-c")
-                    .arg(file)
-                    .stdout(Stdio::piped())
-                    .stderr(Stdio::piped())
-                    .spawn();
+            let task_sender = sender.clone();
+            self.runtime.spawn({
+                let file = file.clone();
+                let tool_name = tool_name.clone();
+                async move {
+                    let command = TokioCommand::new("zsh")
+                        .arg("-c")
+                        .arg(file)
+                        .stdout(Stdio::piped())
+                        .stderr(Stdio::piped())
+                        .spawn();
 
-                let mut child = match command {
-                    Ok(child) => child,
-                    Err(e) => {
-                        let hint = match e.kind() {
-                            std::io::ErrorKind::NotFound => "Script not found or zsh missing?",
-                            std::io::ErrorKind::PermissionDenied => "Try chmod +x or run with sudo",
-                            std::io::ErrorKind::Other => "unknown error",
-                            _ => "unknown error",
-                        };
-                        let _ = sender.send(format!("Failed to spawn command: {e}\n{hint}"));
-                        return;
+                    let mut child = match command {
+                        Ok(child) => child,
+                        Err(e) => {
+                            let hint = match e.kind() {
+                                std::io::ErrorKind::NotFound => "Script not found or zsh missing?",
+                                std::io::ErrorKind::PermissionDenied => {
+                                    "Try chmod +x or run with sudo"
+                                }
+                                std::io::ErrorKind::Other => "unknown error",
+                                _ => "unknown error",
+                            };
+                            let _ =
+                                task_sender.send(format!("Failed to spawn command: {e}\n{hint}"));
+                            return;
+                        }
+                    };
+                    let stdout_prefix = format!("{} | ", tool_name);
+                    let stderr_prefix = format!("{} | error: ", tool_name);
+                    let stdout_task = child.stdout.take().map(|stdout| {
+                        let sender = task_sender.clone();
+                        let prefix = stdout_prefix.clone();
+                        tokio::spawn(async move {
+                            forward_stream(stdout, sender, "stdout", prefix).await;
+                        })
+                    });
+
+                    let stderr_task = child.stderr.take().map(|stderr| {
+                        let sender = task_sender.clone();
+                        let prefix = stderr_prefix.clone();
+                        tokio::spawn(async move {
+                            forward_stream(stderr, sender, "stderr", prefix).await;
+                        })
+                    });
+
+                    let status = child.wait().await;
+
+                    if let Some(task) = stdout_task {
+                        let _ = task.await;
                     }
-                };
-                let stdout_task = child.stdout.take().map(|stdout| {
-                    let sender = sender.clone();
-                    tokio::spawn(async move {
-                        forward_stream(stdout, sender, "stdout", "").await;
-                    })
-                });
-
-                let stderr_task = child.stderr.take().map(|stderr| {
-                    let sender = sender.clone();
-                    tokio::spawn(async move {
-                        forward_stream(stderr, sender, "stderr", "stderr: ").await;
-                    })
-                });
-
-                let status = child.wait().await;
-
-                if let Some(task) = stdout_task {
-                    let _ = task.await;
-                }
-                if let Some(task) = stderr_task {
-                    let _ = task.await;
-                }
-
-                match status {
-                    Ok(status) => {
-                        let _ = sender.send(format!("Command exited with status: {}\n", status));
+                    if let Some(task) = stderr_task {
+                        let _ = task.await;
                     }
-                    Err(e) => {
-                        let _ = sender.send(format!("Command failed with error: {}\n", e));
+
+                    match status {
+                        Ok(status) => {
+                            let _ = task_sender
+                                .send(format!("Command exited with status: {}\n", status));
+                        }
+                        Err(e) => {
+                            let _ = task_sender.send(format!("Command failed with error: {}\n", e));
+                        }
                     }
                 }
             });
