@@ -1,8 +1,10 @@
 mod app_actions;
+mod app_events;
 mod app_ui;
 mod dotfiles;
+mod dotfiles_actions;
+mod dotfiles_events;
 mod dotfiles_ui;
-mod app_events;
 mod execute;
 mod execute_actions;
 mod execute_events;

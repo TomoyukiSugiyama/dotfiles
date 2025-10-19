@@ -10,28 +10,28 @@ impl Execute {
             // Add other key handlers here.
             (_, KeyCode::Home) => {
                 if self.view == ViewTab::Menu {
-                    self.select_first()
+                    self.menu.select_first()
                 } else {
                     self.scroll_log_to_top()
                 }
             }
             (_, KeyCode::End) => {
                 if self.view == ViewTab::Menu {
-                    self.select_last()
+                    self.menu.select_last()
                 } else {
                     self.scroll_log_to_bottom()
                 }
             }
             (_, KeyCode::Up) => {
                 if self.view == ViewTab::Menu {
-                    self.select_previous()
+                    self.menu.select_previous()
                 } else {
                     self.scroll_log(-1)
                 }
             }
             (_, KeyCode::Down) => {
                 if self.view == ViewTab::Menu {
-                    self.select_next()
+                    self.menu.select_next()
                 } else {
                     self.scroll_log(1)
                 }
@@ -44,21 +44,5 @@ impl Execute {
             (_, KeyCode::Tab) => self.view = self.view.next(),
             _ => {}
         }
-    }
-
-    fn select_first(&mut self) {
-        self.menu.state.select_first();
-    }
-
-    fn select_last(&mut self) {
-        self.menu.state.select_last();
-    }
-
-    fn select_previous(&mut self) {
-        self.menu.state.select_previous();
-    }
-
-    fn select_next(&mut self) {
-        self.menu.state.select_next();
     }
 }

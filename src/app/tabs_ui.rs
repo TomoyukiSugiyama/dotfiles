@@ -17,20 +17,6 @@ impl SelectedTab {
         Line::from(format!("  {title}  "))
     }
 
-    pub(crate) fn next(self) -> Self {
-        let tab = match self {
-            SelectedTab::Dotfiles => SelectedTab::Execute,
-            SelectedTab::Execute => SelectedTab::Dotfiles,
-        };
-        tab
-    }
-    pub(crate) fn previous(self) -> Self {
-        let tab = match self {
-            SelectedTab::Dotfiles => SelectedTab::Execute,
-            SelectedTab::Execute => SelectedTab::Dotfiles,
-        };
-        tab
-    }
     pub(crate) fn render_tabs(self, area: Rect, buffer: &mut Buffer) {
         let titles = SelectedTab::iter()
             .map(|tab| tab.title())

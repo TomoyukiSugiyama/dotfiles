@@ -26,38 +26,15 @@ impl App {
         match (key.modifiers, key.code) {
             (_, KeyCode::Esc | KeyCode::Char('q'))
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
-            (_, KeyCode::Left) => self.select_previous_tab(),
-            (_, KeyCode::Right) => self.select_next_tab(),
+            (_, KeyCode::Left) => self.selected_tab.select_previous_tab(),
+            (_, KeyCode::Right) => self.selected_tab.select_next_tab(),
             _ => {
                 if self.selected_tab == SelectedTab::Dotfiles {
-                    self.on_key_event_dotfiles(key)
+                    self.dotfiles.on_key_event(key)
                 } else {
                     self.execute.on_key_event(key)
                 }
             }
         }
-    }
-
-    fn on_key_event_dotfiles(&mut self, key: KeyEvent) {
-        match (key.modifiers, key.code) {
-            (_, KeyCode::Up) => self.todo(),
-            (_, KeyCode::Down) => self.todo(),
-            (_, KeyCode::Enter) => self.todo(),
-            (_, KeyCode::Home) => self.todo(),
-            (_, KeyCode::End) => self.todo(),
-            _ => {}
-        }
-    }
-
-    fn select_previous_tab(&mut self) {
-        self.selected_tab = self.selected_tab.previous();
-    }
-
-    fn select_next_tab(&mut self) {
-        self.selected_tab = self.selected_tab.next();
-    }
-
-    fn todo(&mut self) {
-        todo!()
     }
 }

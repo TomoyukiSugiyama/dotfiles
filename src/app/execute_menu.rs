@@ -35,3 +35,22 @@ impl FromIterator<(String, Option<MenuItemAction>)> for Menu {
         }
     }
 }
+
+impl Menu {
+    pub(crate) fn select_first(&mut self) {
+        self.state.select_first();
+    }
+
+    pub(crate) fn select_last(&mut self) {
+        self.state.select_last();
+    }
+
+    pub(crate) fn select_previous(&mut self) {
+        self.state.select_previous();
+    }
+
+    pub(crate) fn select_next(&mut self) {
+        self.state.select_next();
+    }
+
+}

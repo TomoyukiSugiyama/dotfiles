@@ -13,4 +13,27 @@ impl SelectedTab {
     pub fn new() -> Self {
         Self::Execute
     }
+
+    fn next(self) -> Self {
+        let tab = match self {
+            SelectedTab::Dotfiles => SelectedTab::Execute,
+            SelectedTab::Execute => SelectedTab::Dotfiles,
+        };
+        tab
+    }
+    fn previous(self) -> Self {
+        let tab = match self {
+            SelectedTab::Dotfiles => SelectedTab::Execute,
+            SelectedTab::Execute => SelectedTab::Dotfiles,
+        };
+        tab
+    }
+
+    pub fn select_next_tab(&mut self) {
+        *self = self.next();
+    }
+
+    pub fn select_previous_tab(&mut self) {
+        *self = self.previous();
+    }
 }

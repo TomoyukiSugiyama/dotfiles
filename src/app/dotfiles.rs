@@ -15,7 +15,7 @@ pub(crate) struct ToolsSettings {
 }
 
 impl Dotfiles {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let tools_settings = ToolsSettings {
             state: ListState::default(),
             tools: Tools::new(),
