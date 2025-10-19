@@ -66,10 +66,28 @@ impl Dotfiles {
             .selected()
             .and_then(|index| self.preferences.tools_settings.tools.items.get(index))
             .map(|item| {
+                let script = self
+                    .preferences
+                    .tools_settings
+                    .tools
+                    .raw_script(item)
+                    .unwrap_or_else(|| "(Failed to read script)".to_string());
+
+                let formatted_script = if script.trim().is_empty() {
+                    "  (File is empty)".to_string()
+                } else {
+                    script
+                        .lines()
+                        .map(|line| format!("  {line}"))
+                        .collect::<Vec<String>>()
+                        .join("\n")
+                };
+
                 format!(
-                    "Tool: {}\nFilepath: {}",
+                    "Tool: {}\nPath: {}\n\nScript:\n{}",
                     item.name,
-                    self.preferences.tools_settings.tools.file_path(item)
+                    self.preferences.tools_settings.tools.file_path(item),
+                    formatted_script
                 )
             })
             .unwrap_or_else(|| "Select a tool to view its details.".to_string());
