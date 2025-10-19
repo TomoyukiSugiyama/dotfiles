@@ -24,6 +24,10 @@ impl Execute {
         }
 
         self.view_height = area.height as usize;
+        if self.pending_scroll_to_bottom {
+            self.scroll_log_to_bottom();
+            self.pending_scroll_to_bottom = false;
+        }
         let text: String = self
             .log_lines
             .iter()

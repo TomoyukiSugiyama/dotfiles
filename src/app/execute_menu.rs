@@ -52,5 +52,4 @@ impl Menu {
     pub(crate) fn select_next(&mut self) {
         self.state.select_next();
     }
-
 }

@@ -30,6 +30,7 @@ pub(crate) struct Execute {
     pub log_lines: VecDeque<String>,
     pub log_scroll: u16,
     pub view_height: usize,
+    pub pending_scroll_to_bottom: bool,
     pub view: ViewTab,
     pub tools: Tools,
 }
@@ -49,6 +50,7 @@ impl Execute {
             log_lines: VecDeque::new(),
             log_scroll: 0,
             view_height: 0,
+            pending_scroll_to_bottom: false,
             view: ViewTab::Menu,
             tools: Tools::new(),
         }

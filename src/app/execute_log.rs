@@ -42,10 +42,11 @@ impl Execute {
                 self.log_lines.pop_front();
             }
             self.log_lines.push_back(message);
-            self.log_scroll = self
-                .log_lines
-                .len()
-                .saturating_sub(self.view_height as usize) as u16;
+            if self.view_height == 0 {
+                self.pending_scroll_to_bottom = true;
+            } else {
+                self.scroll_log_to_bottom();
+            }
         }
     }
 }
