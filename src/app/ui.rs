@@ -1,27 +1,12 @@
 use super::App;
 use super::tabs::SelectedTab;
-use ratatui::text::Line;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Layout, Rect},
-    widgets::{Paragraph, Tabs, Widget},
+    widgets::{Paragraph, Widget},
 };
-use strum::IntoEnumIterator;
 
 impl App {
-    fn render_footer(&mut self, area: Rect, buffer: &mut Buffer) {
-        Paragraph::new("Use ↓↑ to move, ← to unselect, → to select, Home/End to go top/bottom.")
-            .centered()
-            .render(area, buffer);
-    }
-
-    fn render_tabs(&mut self, area: Rect, buffer: &mut Buffer) {
-        let titles = SelectedTab::iter()
-            .map(|tab| Line::from(tab.title()))
-            .collect::<Vec<Line>>();
-        Tabs::new(titles).render(area, buffer);
-    }
-
     fn render_title(&mut self, area: Rect, buffer: &mut Buffer) {
         Paragraph::new("Dotfiles Manager")
             .centered()
@@ -33,6 +18,12 @@ impl App {
             SelectedTab::Dotfiles => self.execute.render(area, buffer),
             SelectedTab::Execute => self.execute.render(area, buffer),
         }
+    }
+
+    fn render_footer(&mut self, area: Rect, buffer: &mut Buffer) {
+        Paragraph::new("Use ↓↑ to move, ← to unselect, → to select, Home/End to go top/bottom.")
+            .centered()
+            .render(area, buffer);
     }
 }
 
@@ -49,9 +40,9 @@ impl Widget for &mut App {
             Layout::horizontal([Constraint::Percentage(70), Constraint::Percentage(30)])
                 .areas(header_area);
 
-        self.render_tabs(tabs_area, buffer);
-        self.render_inner(inner_area, buffer);
         self.render_title(title_area, buffer);
+        self.selected_tab.render(tabs_area, buffer);
+        self.render_inner(inner_area, buffer);
         self.render_footer(footer_area, buffer);
     }
 }

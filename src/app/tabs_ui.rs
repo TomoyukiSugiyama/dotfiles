@@ -1,7 +1,12 @@
 use super::tabs::SelectedTab;
+use ratatui::buffer::Buffer;
+use ratatui::layout::Rect;
 use ratatui::style::Color;
 use ratatui::style::Style;
 use ratatui::text::Line;
+use ratatui::widgets::Tabs;
+use ratatui::widgets::Widget;
+use strum::IntoEnumIterator;
 
 impl SelectedTab {
     pub(crate) fn title(self) -> Line<'static> {
@@ -9,8 +14,7 @@ impl SelectedTab {
             SelectedTab::Dotfiles => "Dotfiles",
             SelectedTab::Execute => "Execute",
         };
-        let line = Line::from(format!("  {title}  "));
-        line.style(Style::new().fg(Color::White).bg(Color::Black))
+        Line::from(format!("  {title}  "))
     }
 
     pub(crate) fn next(self) -> Self {
@@ -27,14 +31,20 @@ impl SelectedTab {
         };
         tab
     }
+    pub(crate) fn render_tabs(self, area: Rect, buffer: &mut Buffer) {
+        let titles = SelectedTab::iter()
+            .map(|tab| tab.title())
+            .collect::<Vec<Line>>();
+        Tabs::new(titles)
+            .style(Style::new().fg(Color::White))
+            .highlight_style(Style::new().fg(Color::Black).bg(Color::White))
+            .select(self as usize)
+            .render(area, buffer);
+    }
 }
 
-// impl Widget for SelectedTab {
-//     fn render(self, area: Rect, buffer: &mut Buffer) {
-//         // if self.tab == Tab::Dotfiles {
-//         //     self.execute.render(area, buffer)
-//         // } else {
-//         //     self.execute.render(area, buffer)
-//         // }
-//     }
-// }
+impl Widget for SelectedTab {
+    fn render(self, area: Rect, buffer: &mut Buffer) {
+        self.render_tabs(area, buffer);
+    }
+}
