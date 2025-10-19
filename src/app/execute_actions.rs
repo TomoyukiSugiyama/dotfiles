@@ -50,14 +50,26 @@ impl Execute {
             let _ = sender.send(format!("Updating {}\n", tool.name));
             let _ = sender.send(format!("Running {}\n", file));
             self.runtime.spawn(async move {
-                let mut child = TokioCommand::new("zsh")
+                let command = TokioCommand::new("zsh")
                     .arg("-c")
                     .arg(file)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
-                    .spawn()
-                    .expect("failed to spawn command");
+                    .spawn();
 
+                let mut child = match command {
+                    Ok(child) => child,
+                    Err(e) => {
+                        let hint = match e.kind() {
+                            std::io::ErrorKind::NotFound => "Script not found or zsh missing?",
+                            std::io::ErrorKind::PermissionDenied => "Try chmod +x or run with sudo",
+                            std::io::ErrorKind::Other => "unknown error",
+                            _ => "unknown error",
+                        };
+                        let _ = sender.send(format!("Failed to spawn command: {e}\n{hint}"));
+                        return;
+                    }
+                };
                 let stdout_task = child.stdout.take().map(|stdout| {
                     let sender = sender.clone();
                     tokio::spawn(async move {
