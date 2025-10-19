@@ -48,8 +48,8 @@ impl Execute {
             let sender = self.log_sender.clone();
             let file = self.tools.file_path(tool);
             let tool_name = tool.name.clone();
-            let _ = sender.send(format!("Updating {}\n", tool.name));
-            let _ = sender.send(format!("Running {}\n", file));
+            let _ = sender.send(format!("{} | Updating...\n", tool_name));
+            let _ = sender.send(format!("{} | Running {}\n", tool_name, file));
             let task_sender = sender.clone();
             self.runtime.spawn({
                 let file = file.clone();
@@ -107,11 +107,16 @@ impl Execute {
 
                     match status {
                         Ok(status) => {
-                            let _ = task_sender
-                                .send(format!("Command exited with status: {}\n", status));
+                            let _ = task_sender.send(format!(
+                                "{} | Command exited with status: {}\n",
+                                tool_name, status
+                            ));
                         }
                         Err(e) => {
-                            let _ = task_sender.send(format!("Command failed with error: {}\n", e));
+                            let _ = task_sender.send(format!(
+                                "{} | Command failed with error: {}\n",
+                                tool_name, e
+                            ));
                         }
                     }
                 }
