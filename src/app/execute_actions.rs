@@ -28,10 +28,13 @@ impl Execute {
         }
 
         self.log_scroll = if amount < 0 {
-            self.log_scroll.saturating_sub(amount.abs() as u16)
+            self.log_scroll.saturating_sub(amount.unsigned_abs())
         } else {
-            self.log_scroll.saturating_add(amount.abs() as u16)
+            self.log_scroll.saturating_add(amount.unsigned_abs())
         };
+
+        let max_scroll = self.log_lines.len().saturating_sub(self.view_height) as u16;
+        self.log_scroll = self.log_scroll.min(max_scroll);
     }
 
     pub(crate) fn scroll_log_to_bottom(&mut self) {

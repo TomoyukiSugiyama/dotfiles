@@ -15,18 +15,16 @@ impl SelectedTab {
     }
 
     fn next(self) -> Self {
-        let tab = match self {
+        match self {
             SelectedTab::Dotfiles => SelectedTab::Execute,
             SelectedTab::Execute => SelectedTab::Dotfiles,
-        };
-        tab
+        }
     }
     fn previous(self) -> Self {
-        let tab = match self {
+        match self {
             SelectedTab::Dotfiles => SelectedTab::Execute,
             SelectedTab::Execute => SelectedTab::Dotfiles,
-        };
-        tab
+        }
     }
 
     pub fn select_next_tab(&mut self) {

@@ -44,7 +44,7 @@ impl Execute {
         )]);
         menu.state.select_first();
         Self {
-            menu: menu,
+            menu,
             runtime: Runtime::new().expect("failed to start tokio runtime"),
             log_sender,
             log_receiver,

@@ -24,13 +24,10 @@ impl FromIterator<(String, Option<MenuItemAction>)> for Menu {
     {
         let items = iter
             .into_iter()
-            .map(|(title, action)| MenuItem {
-                title: title,
-                action: action,
-            })
+            .map(|(title, action)| MenuItem { title, action })
             .collect();
         Self {
-            items: items,
+            items,
             state: ListState::default(),
         }
     }

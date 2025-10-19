@@ -38,9 +38,7 @@ impl Dotfiles {
         };
         tools_settings.state.select_first();
 
-        let preferences = Preferences {
-            tools_settings: tools_settings,
-        };
+        let preferences = Preferences { tools_settings };
         Self {
             preferences,
             view: ViewTab::Menu,
