@@ -1,7 +1,8 @@
-mod actions;
+mod app_actions;
+mod app_ui;
 mod dotfiles;
 mod dotfiles_ui;
-mod events;
+mod app_events;
 mod execute;
 mod execute_actions;
 mod execute_events;
@@ -10,7 +11,6 @@ mod execute_menu;
 mod execute_ui;
 mod tabs;
 mod tabs_ui;
-mod ui;
 
 use color_eyre::Result;
 use dotfiles::Dotfiles;
