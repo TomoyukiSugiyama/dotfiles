@@ -1,6 +1,6 @@
 use super::execute::Execute;
+use super::execute_log::forward_stream;
 use super::execute_menu::MenuItemAction;
-use crate::logging::forward_stream;
 use std::process::Stdio;
 use tokio::process::Command as TokioCommand;
 

@@ -39,12 +39,10 @@ impl Execute {
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
 
         Self {
-            menu: Menu::from_iter([
-                (
-                    "Update Dotfiles".to_string(),
-                    Some(MenuItemAction::UpdateDotfiles),
-                ),
-            ]),
+            menu: Menu::from_iter([(
+                "Update Dotfiles".to_string(),
+                Some(MenuItemAction::UpdateDotfiles),
+            )]),
             runtime: Runtime::new().expect("failed to start tokio runtime"),
             log_sender,
             log_receiver,

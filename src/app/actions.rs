@@ -5,5 +5,4 @@ impl App {
     pub(crate) fn quit(&mut self) {
         self.running = false;
     }
-
 }

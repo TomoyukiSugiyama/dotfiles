@@ -1,5 +1,4 @@
 mod app;
-mod logging;
 mod tools;
 
 use app::App;
