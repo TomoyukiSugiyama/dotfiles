@@ -44,7 +44,6 @@ impl Execute {
                     "Update Dotfiles".to_string(),
                     Some(MenuItemAction::UpdateDotfiles),
                 ),
-                ("Quit".to_string(), Some(MenuItemAction::Quit)),
             ]),
             runtime: Runtime::new().expect("failed to start tokio runtime"),
             log_sender,

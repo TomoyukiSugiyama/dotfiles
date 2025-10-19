@@ -15,7 +15,6 @@ pub(crate) struct MenuItem {
 #[derive(Debug)]
 pub(crate) enum MenuItemAction {
     UpdateDotfiles,
-    Quit,
 }
 
 impl FromIterator<(String, Option<MenuItemAction>)> for Menu {
