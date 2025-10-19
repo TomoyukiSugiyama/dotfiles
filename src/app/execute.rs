@@ -1,8 +1,8 @@
 use crate::tools::Tools;
 
-use super::menu::Menu;
+use super::execute_menu::Menu;
 
-use super::menu::MenuItemAction;
+use super::execute_menu::MenuItemAction;
 use std::collections::VecDeque;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;

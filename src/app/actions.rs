@@ -1,5 +1,5 @@
 use super::App;
-use super::menu::MenuItemAction;
+use super::execute_menu::MenuItemAction;
 use crate::logging::forward_stream;
 use std::process::Stdio;
 use tokio::process::Command as TokioCommand;

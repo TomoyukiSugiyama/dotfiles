@@ -1,8 +1,8 @@
 mod actions;
 mod events;
 mod execute;
+mod execute_menu;
 mod execute_ui;
-mod menu;
 mod tabs;
 mod tabs_ui;
 mod ui;
