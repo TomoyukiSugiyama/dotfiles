@@ -20,7 +20,7 @@ impl Dotfiles {
             .title(Line::from("Preferences"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
-            .border_style(Style::new().fg(Color::Black));
+            .border_style(Style::new().fg(Color::White));
 
         let items = self
             .preferences
@@ -48,7 +48,7 @@ impl Dotfiles {
             .title(Line::from("View"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
-            .border_style(Style::new().fg(Color::Black));
+            .border_style(Style::new().fg(Color::White));
 
         let text = self
             .preferences

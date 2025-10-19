@@ -18,7 +18,7 @@ impl Execute {
             .title(Line::from("Log"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
-            .border_style(Style::new().fg(Color::Black));
+            .border_style(Style::new().fg(Color::White));
         if focused {
             block = block.border_style(Style::new().fg(Color::Yellow));
         }
@@ -39,7 +39,7 @@ impl Execute {
             .title(Line::from("Menu"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
-            .border_style(Style::new().fg(Color::Black));
+            .border_style(Style::new().fg(Color::White));
         if focused {
             block = block.border_style(Style::new().fg(Color::Yellow));
         }
