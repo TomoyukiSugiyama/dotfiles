@@ -38,12 +38,13 @@ pub(crate) struct Execute {
 impl Execute {
     pub fn new() -> Self {
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
-
+        let mut menu = Menu::from_iter([(
+            "Update Dotfiles".to_string(),
+            Some(MenuItemAction::UpdateDotfiles),
+        )]);
+        menu.state.select_first();
         Self {
-            menu: Menu::from_iter([(
-                "Update Dotfiles".to_string(),
-                Some(MenuItemAction::UpdateDotfiles),
-            )]),
+            menu: menu,
             runtime: Runtime::new().expect("failed to start tokio runtime"),
             log_sender,
             log_receiver,

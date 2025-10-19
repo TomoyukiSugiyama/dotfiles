@@ -47,7 +47,7 @@ impl Execute {
             block = block.border_style(Style::new().fg(Color::Yellow));
         }
 
-        self.view_height = area.height as usize;
+        self.view_height = block.inner(area).height as usize;
         if self.pending_scroll_to_bottom {
             self.scroll_log_to_bottom();
             self.pending_scroll_to_bottom = false;
