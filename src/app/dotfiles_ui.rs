@@ -1,4 +1,5 @@
 use super::dotfiles::Dotfiles;
+use super::dotfiles::ViewTab;
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::layout::{Constraint, Layout};
@@ -16,11 +17,15 @@ const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier:
 
 impl Dotfiles {
     fn render_menu(&mut self, area: Rect, buffer: &mut Buffer) {
-        let block = Block::new()
+        let mut block = Block::new()
             .title(Line::from("Preferences"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::White));
+
+        if self.view == ViewTab::Menu {
+            block = block.border_style(Style::new().fg(Color::Yellow));
+        }
 
         let items = self
             .preferences
@@ -44,11 +49,15 @@ impl Dotfiles {
     }
 
     fn render_view(&mut self, area: Rect, buffer: &mut Buffer) {
-        let block = Block::new()
+        let mut block = Block::new()
             .title(Line::from("View"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::White));
+
+        if self.view == ViewTab::View {
+            block = block.border_style(Style::new().fg(Color::Yellow));
+        }
 
         let text = self
             .preferences
