@@ -1,6 +1,6 @@
 use super::App;
+use super::execute::ViewTab;
 use super::tabs::SelectedTab;
-use super::ui::ViewTab;
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use std::time::Duration;
@@ -54,39 +54,39 @@ impl App {
         match (key.modifiers, key.code) {
             // Add other key handlers here.
             (_, KeyCode::Home) => {
-                if self.view == ViewTab::Menu {
+                if self.execute.view == ViewTab::Menu {
                     self.select_first()
                 } else {
                     self.scroll_log_to_top()
                 }
             }
             (_, KeyCode::End) => {
-                if self.view == ViewTab::Menu {
+                if self.execute.view == ViewTab::Menu {
                     self.select_last()
                 } else {
                     self.scroll_log_to_bottom()
                 }
             }
             (_, KeyCode::Up) => {
-                if self.view == ViewTab::Menu {
+                if self.execute.view == ViewTab::Menu {
                     self.select_previous()
                 } else {
                     self.scroll_log(-1)
                 }
             }
             (_, KeyCode::Down) => {
-                if self.view == ViewTab::Menu {
+                if self.execute.view == ViewTab::Menu {
                     self.select_next()
                 } else {
                     self.scroll_log(1)
                 }
             }
             (_, KeyCode::Enter) => {
-                if self.view == ViewTab::Menu {
+                if self.execute.view == ViewTab::Menu {
                     self.execute_selected()
                 }
             }
-            (_, KeyCode::Tab) => self.select_next_view(),
+            (_, KeyCode::Tab) => self.execute.view = self.execute.view.next(),
             _ => {}
         }
     }
@@ -99,23 +99,19 @@ impl App {
         self.selected_tab = self.selected_tab.next();
     }
     fn select_first(&mut self) {
-        self.menu.state.select_first();
+        self.execute.menu.state.select_first();
     }
 
     fn select_last(&mut self) {
-        self.menu.state.select_last();
+        self.execute.menu.state.select_last();
     }
 
     fn select_previous(&mut self) {
-        self.menu.state.select_previous();
+        self.execute.menu.state.select_previous();
     }
 
     fn select_next(&mut self) {
-        self.menu.state.select_next();
-    }
-
-    fn select_next_view(&mut self) {
-        self.view = self.view.next();
+        self.execute.menu.state.select_next();
     }
 
     fn todo(&mut self) {

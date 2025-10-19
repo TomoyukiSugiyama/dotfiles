@@ -6,8 +6,8 @@ use tokio::process::Command as TokioCommand;
 
 impl App {
     pub(crate) fn execute_selected(&mut self) {
-        if let Some(selected_index) = self.menu.state.selected() {
-            let item = &self.menu.items[selected_index];
+        if let Some(selected_index) = self.execute.menu.state.selected() {
+            let item = &self.execute.menu.items[selected_index];
             match item.action {
                 Some(MenuItemAction::UpdateDotfiles) => self.update_dotfiles(),
                 Some(MenuItemAction::Quit) => self.quit(),
@@ -16,30 +16,39 @@ impl App {
         }
     }
     pub(crate) fn scroll_log(&mut self, amount: i16) {
-        if self.log_lines.is_empty() {
+        if self.execute.log_lines.is_empty() {
             return;
         }
-        if self.log_scroll == self.log_lines.len().saturating_sub(self.view_height) as u16
+        if self.execute.log_scroll
+            == self
+                .execute
+                .log_lines
+                .len()
+                .saturating_sub(self.execute.view_height) as u16
             && amount > 0
         {
             return;
         }
-        if self.log_scroll == 0 && amount < 0 {
+        if self.execute.log_scroll == 0 && amount < 0 {
             return;
         }
 
-        self.log_scroll = if amount < 0 {
-            self.log_scroll.saturating_sub(amount.abs() as u16)
+        self.execute.log_scroll = if amount < 0 {
+            self.execute.log_scroll.saturating_sub(amount.abs() as u16)
         } else {
-            self.log_scroll.saturating_add(amount.abs() as u16)
+            self.execute.log_scroll.saturating_add(amount.abs() as u16)
         };
     }
 
     pub(crate) fn scroll_log_to_bottom(&mut self) {
-        self.log_scroll = self.log_lines.len().saturating_sub(self.view_height) as u16;
+        self.execute.log_scroll = self
+            .execute
+            .log_lines
+            .len()
+            .saturating_sub(self.execute.view_height) as u16;
     }
     pub(crate) fn scroll_log_to_top(&mut self) {
-        self.log_scroll = 0;
+        self.execute.log_scroll = 0;
     }
 
     /// Set running to false to quit the application.
@@ -48,14 +57,17 @@ impl App {
     }
 
     fn update_dotfiles(&mut self) {
-        let _ = self.log_sender.send("Updating dotfiles...\n".to_string());
+        let _ = self
+            .execute
+            .log_sender
+            .send("Updating dotfiles...\n".to_string());
 
-        for tool in self.tools.items.iter() {
-            let sender = self.log_sender.clone();
-            let file = self.tools.file_path(tool);
+        for tool in self.execute.tools.items.iter() {
+            let sender = self.execute.log_sender.clone();
+            let file = self.execute.tools.file_path(tool);
             let _ = sender.send(format!("Updating {}\n", tool.name));
             let _ = sender.send(format!("Running {}\n", file));
-            self.runtime.spawn(async move {
+            self.execute.runtime.spawn(async move {
                 let mut child = TokioCommand::new("zsh")
                     .arg("-c")
                     .arg(file)

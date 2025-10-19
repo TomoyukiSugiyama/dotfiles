@@ -39,12 +39,16 @@ const MAX_LOG_LINES: usize = 1000;
 
 impl App {
     pub(crate) fn drain_log_messages(&mut self) {
-        while let Ok(message) = self.log_receiver.try_recv() {
-            if self.log_lines.len() >= MAX_LOG_LINES {
-                self.log_lines.pop_front();
+        while let Ok(message) = self.execute.log_receiver.try_recv() {
+            if self.execute.log_lines.len() >= MAX_LOG_LINES {
+                self.execute.log_lines.pop_front();
             }
-            self.log_lines.push_back(message);
-            self.log_scroll = self.log_lines.len().saturating_sub(self.view_height) as u16;
+            self.execute.log_lines.push_back(message);
+            self.execute.log_scroll =
+                self.execute
+                    .log_lines
+                    .len()
+                    .saturating_sub(self.execute.view_height as usize) as u16;
         }
     }
 }
