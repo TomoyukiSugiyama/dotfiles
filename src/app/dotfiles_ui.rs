@@ -62,9 +62,9 @@ impl Dotfiles {
         let text = self
             .preferences
             .tools_settings
-            .tools
-            .items
-            .iter()
+            .state
+            .selected()
+            .and_then(|index| self.preferences.tools_settings.tools.items.get(index))
             .map(|item| {
                 format!(
                     "Tool: {}\nFilepath: {}",
@@ -72,8 +72,8 @@ impl Dotfiles {
                     self.preferences.tools_settings.tools.file_path(item)
                 )
             })
-            .collect::<Vec<String>>()
-            .join("\n");
+            .unwrap_or_else(|| "Select a tool to view its details.".to_string());
+
         Paragraph::new(text).block(block).render(area, buffer);
     }
 }
