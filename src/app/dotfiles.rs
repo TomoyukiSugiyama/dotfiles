@@ -1,9 +1,13 @@
 use crate::tools::Tools;
 use ratatui::widgets::ListState;
+use std::collections::VecDeque;
 
 pub(crate) struct Dotfiles {
     pub preferences: Preferences,
     pub view: ViewTab,
+    pub script_lines: VecDeque<String>,
+    pub script_scroll: u16,
+    pub view_height: usize,
 }
 
 pub(crate) struct Preferences {
@@ -18,14 +22,14 @@ pub(crate) struct ToolsSettings {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ViewTab {
     Menu,
-    View,
+    Script,
 }
 
 impl ViewTab {
     pub fn next(self) -> Self {
         match self {
-            ViewTab::Menu => ViewTab::View,
-            ViewTab::View => ViewTab::Menu,
+            ViewTab::Menu => ViewTab::Script,
+            ViewTab::Script => ViewTab::Menu,
         }
     }
 }
@@ -44,6 +48,9 @@ impl Dotfiles {
         Self {
             preferences,
             view: ViewTab::Menu,
+            script_lines: VecDeque::new(),
+            script_scroll: 0,
+            view_height: 0,
         }
     }
 }

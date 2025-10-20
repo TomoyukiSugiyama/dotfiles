@@ -58,15 +58,11 @@ impl Dotfiles {
     }
 
     fn render_view(&mut self, area: Rect, buffer: &mut Buffer) {
-        let mut block = Block::new()
+        let block = Block::new()
             .title(Line::from("Tool Details"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::White));
-
-        if self.view == ViewTab::View {
-            block = block.border_style(Style::new().fg(Color::Yellow));
-        }
 
         let inner_block = block.clone();
         block.render(area, buffer);
@@ -103,24 +99,12 @@ impl Dotfiles {
         );
 
         let dependency_map_text = dependency_map.join("\n");
-
-        let formatted_script = if script.trim().is_empty() {
-            "  (File is empty)".to_string()
-        } else {
-            script
-                .lines()
-                .map(|line| format!("  {line}"))
-                .collect::<Vec<String>>()
-                .join("\n")
-        };
-
         let chunks = Layout::vertical([
             Constraint::Length(7),
             Constraint::Length((dependency_map_text.lines().count() + 2) as u16),
             Constraint::Min(3),
         ])
         .split(inner);
-
         Paragraph::new(info_text).render(chunks[0], buffer);
 
         let map_block = Block::new()
@@ -132,15 +116,29 @@ impl Dotfiles {
             .block(map_block)
             .render(chunks[1], buffer);
 
-        let script_block = Block::new()
+        let mut script_block = Block::new()
             .title(Line::from("Script"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::White));
-        Paragraph::new(formatted_script)
+        if self.view == ViewTab::Script {
+            script_block = script_block.border_style(Style::new().fg(Color::Yellow));
+        }
+        self.view_height = script_block.inner(chunks[2]).height as usize;
+        self.script_lines = script.lines().map(|line| format!("  {line}")).collect();
+        let text = self
+            .script_lines
+            .iter()
+            .skip(self.script_scroll as usize)
+            .take(self.view_height)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n");
+        Paragraph::new(text)
             .block(script_block)
             .render(chunks[2], buffer);
     }
+
 }
 
 impl Widget for &mut Dotfiles {
