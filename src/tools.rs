@@ -19,6 +19,12 @@ pub(crate) struct ToolItem {
     pub dependencies: Vec<String>,
 }
 
+impl ToolItem {
+    pub(crate) fn display_name(&self) -> String {
+        format!("{} ({})", self.name, self.id)
+    }
+}
+
 #[derive(Debug)]
 pub enum ToolError {
     DuplicateId(String),
@@ -122,6 +128,89 @@ impl Tools {
         stages
     }
 
+    pub(crate) fn dependency_map_lines(&self, highlight_id: Option<&str>) -> Vec<String> {
+        let mut lines = Vec::new();
+        let mut visited = HashSet::new();
+
+        let mut roots: Vec<&ToolItem> = self
+            .ordered_ids
+            .iter()
+            .filter_map(|id| self.items.get(id))
+            .filter(|tool| tool.dependencies.is_empty())
+            .collect();
+
+        if roots.is_empty() {
+            roots = self
+                .ordered_ids
+                .iter()
+                .filter_map(|id| self.items.get(id))
+                .collect();
+        }
+
+        for (index, root) in roots.iter().enumerate() {
+            if !visited.insert(root.id.clone()) {
+                continue;
+            }
+
+            let marker = if Some(root.id.as_str()) == highlight_id {
+                "*"
+            } else {
+                "-"
+            };
+            lines.push(format!("{marker} {}", root.display_name()));
+            self.append_dependents_tree(root, "", highlight_id, &mut lines, &mut visited);
+
+            if index + 1 != roots.len() && lines.last().is_some_and(|line| !line.is_empty()) {
+                lines.push(String::new());
+            }
+        }
+
+        for tool in self.ordered_ids.iter().filter_map(|id| self.items.get(id)) {
+            if visited.contains(&tool.id) {
+                continue;
+            }
+
+            if lines.last().is_some_and(|line| !line.is_empty()) {
+                lines.push(String::new());
+            }
+
+            let marker = if Some(tool.id.as_str()) == highlight_id {
+                "*"
+            } else {
+                "-"
+            };
+            lines.push(format!("{marker} {}", tool.display_name()));
+            visited.insert(tool.id.clone());
+            self.append_dependents_tree(tool, "", highlight_id, &mut lines, &mut visited);
+        }
+
+        if matches!(lines.last(), Some(last) if last.is_empty()) {
+            lines.pop();
+        }
+
+        lines
+    }
+
+    pub(crate) fn execution_stage_index(&self, tool_id: &str) -> Option<usize> {
+        let mut stage_map: HashMap<String, usize> = HashMap::new();
+
+        for id in &self.ordered_ids {
+            if let Some(tool) = self.items.get(id) {
+                let max_dependency_stage = tool
+                    .dependencies
+                    .iter()
+                    .filter_map(|dependency| stage_map.get(dependency))
+                    .max()
+                    .copied();
+
+                let stage = max_dependency_stage.map_or(0, |stage| stage + 1);
+                stage_map.insert(tool.id.clone(), stage);
+            }
+        }
+
+        stage_map.get(tool_id).copied()
+    }
+
     fn validate_dependencies(
         items: &HashMap<String, ToolItem>,
         dependency_map: &HashMap<String, Vec<String>>,
@@ -203,6 +292,49 @@ impl Tools {
             Ok(order)
         } else {
             Err(ToolError::CycleDetected)
+        }
+    }
+
+    fn append_dependents_tree(
+        &self,
+        tool: &ToolItem,
+        prefix: &str,
+        highlight_id: Option<&str>,
+        lines: &mut Vec<String>,
+        visited: &mut HashSet<String>,
+    ) {
+        let mut dependents = self
+            .items
+            .values()
+            .filter(|candidate| candidate.dependencies.iter().any(|dep| dep == &tool.id))
+            .collect::<Vec<_>>();
+        dependents.sort_by(|a, b| a.name.cmp(&b.name));
+
+        let last_index = dependents.len().saturating_sub(1);
+        for (index, dependent) in dependents.into_iter().enumerate() {
+            let connector = if index == last_index { "`--" } else { "|--" };
+            let marker = if Some(dependent.id.as_str()) == highlight_id {
+                "*"
+            } else {
+                "-"
+            };
+            let newly_visited = visited.insert(dependent.id.clone());
+            let mut line = format!("{prefix}{connector} {marker} {}", dependent.display_name());
+            if !newly_visited {
+                line.push_str(" (repeat)");
+                lines.push(line);
+                continue;
+            }
+
+            lines.push(line);
+
+            let next_prefix = if index == last_index {
+                format!("{prefix}    ")
+            } else {
+                format!("{prefix}|   ")
+            };
+
+            self.append_dependents_tree(dependent, &next_prefix, highlight_id, lines, visited);
         }
     }
 }

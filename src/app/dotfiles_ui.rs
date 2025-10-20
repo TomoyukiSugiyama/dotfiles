@@ -32,7 +32,7 @@ impl Dotfiles {
             .tools_settings
             .tools
             .iter()
-            .map(|item| ListItem::new(item.name.clone()))
+            .map(|item| ListItem::new(item.display_name()))
             .collect::<Vec<ListItem>>();
         let list = List::new(items)
             .block(block)
@@ -58,40 +58,78 @@ impl Dotfiles {
             block = block.border_style(Style::new().fg(Color::Yellow));
         }
 
-        let text = self
+        let inner_block = block.clone();
+        block.render(area, buffer);
+        let inner = inner_block.inner(area);
+
+        let Some(selected_tool) = self
             .preferences
             .tools_settings
             .state
             .selected()
             .and_then(|index| self.preferences.tools_settings.tools.get_by_index(index))
-            .map(|item| {
-                let script = self
-                    .preferences
-                    .tools_settings
-                    .tools
-                    .raw_script(item)
-                    .unwrap_or_else(|| "(Failed to read script)".to_string());
+        else {
+            Paragraph::new("Select a tool to view its details.").render(inner, buffer);
+            return;
+        };
 
-                let formatted_script = if script.trim().is_empty() {
-                    "  (File is empty)".to_string()
-                } else {
-                    script
-                        .lines()
-                        .map(|line| format!("  {line}"))
-                        .collect::<Vec<String>>()
-                        .join("\n")
-                };
+        let tools = &self.preferences.tools_settings.tools;
+        let stage = tools.execution_stage_index(&selected_tool.id);
+        let dependency_map = tools.dependency_map_lines(Some(&selected_tool.id));
+        let script = tools
+            .raw_script(selected_tool)
+            .unwrap_or_else(|| "(Failed to read script)".to_string());
 
-                format!(
-                    "Tool: {}\nPath: {}\n\nScript:\n{}",
-                    item.name,
-                    self.preferences.tools_settings.tools.file_path(item),
-                    formatted_script
-                )
-            })
-            .unwrap_or_else(|| "Select a tool to view its details.".to_string());
+        let stage_text = stage.map_or("(unknown)".to_string(), |index| {
+            format!("Stage {}", index + 1)
+        });
 
-        Paragraph::new(text).block(block).render(area, buffer);
+        let info_text = format!(
+            "Tool: {}\nID: {}\nPath: {}\nOrder: {}",
+            selected_tool.name,
+            selected_tool.id,
+            tools.file_path(selected_tool),
+            stage_text,
+        );
+
+        let dependency_map_text = dependency_map.join("\n");
+
+        let formatted_script = if script.trim().is_empty() {
+            "  (File is empty)".to_string()
+        } else {
+            script
+                .lines()
+                .map(|line| format!("  {line}"))
+                .collect::<Vec<String>>()
+                .join("\n")
+        };
+
+        let chunks = Layout::vertical([
+            Constraint::Length(7),
+            Constraint::Length((dependency_map_text.lines().count() + 2) as u16),
+            Constraint::Min(3),
+        ])
+        .split(inner);
+
+        Paragraph::new(info_text).render(chunks[0], buffer);
+
+        let map_block = Block::new()
+            .title(Line::from("Dependency Map (* current tool)"))
+            .borders(Borders::ALL)
+            .border_set(symbols::border::PLAIN)
+            .border_style(Style::new().fg(Color::White));
+        Paragraph::new(dependency_map_text)
+            .block(map_block)
+            .render(chunks[1], buffer);
+
+        let script_block = Block::new()
+            .title(Line::from("Script"))
+            .borders(Borders::ALL)
+            .border_set(symbols::border::PLAIN)
+            .border_style(Style::new().fg(Color::White));
+        Paragraph::new(formatted_script)
+            .block(script_block)
+            .render(chunks[2], buffer);
     }
 }
 
