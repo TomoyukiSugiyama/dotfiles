@@ -10,6 +10,7 @@ pub(crate) struct Tools {
     items: HashMap<String, ToolItem>,
 }
 
+#[derive(Clone)]
 pub(crate) struct ToolItem {
     pub id: String,
     pub name: String,
@@ -37,6 +38,7 @@ impl Tools {
         let config = Config::new().expect("Failed to load config");
         let root = config.root().to_string();
         let mut items = HashMap::new();
+        let mut dependency_map: HashMap<String, Vec<String>> = HashMap::new();
 
         for tool in config.tools() {
             let id = tool.identifier().ok_or_else(|| ToolError::MissingId {
@@ -49,6 +51,7 @@ impl Tools {
             if items.contains_key(&id) {
                 return Err(ToolError::DuplicateId(id));
             }
+            dependency_map.insert(id.clone(), dependencies.clone());
             items.insert(
                 id.clone(),
                 ToolItem {
@@ -60,6 +63,8 @@ impl Tools {
                 },
             );
         }
+
+        Self::validate_dependencies(&items, &dependency_map)?;
 
         let ordered_ids = Self::topological_order(&items)?;
 
@@ -86,6 +91,72 @@ impl Tools {
 
     pub(crate) fn raw_script(&self, tool: &ToolItem) -> Option<String> {
         fs::read_to_string(self.tool_path(tool)).ok()
+    }
+
+    pub(crate) fn execution_stages(&self) -> Vec<Vec<ToolItem>> {
+        let mut remaining: HashMap<String, ToolItem> = self.items.clone();
+        let mut ready: Vec<ToolItem> = remaining
+            .values()
+            .filter(|tool| tool.dependencies.is_empty())
+            .cloned()
+            .collect();
+
+        let mut stages = Vec::new();
+        let mut processed: std::collections::HashSet<String> =
+            ready.iter().map(|tool| tool.id.clone()).collect();
+
+        ready.sort_by(|a, b| a.name.cmp(&b.name));
+        if !ready.is_empty() {
+            stages.push(ready.clone());
+        }
+
+        for id in processed.iter() {
+            remaining.remove(id);
+        }
+
+        while !remaining.is_empty() {
+            let mut stage = Vec::new();
+            let mut newly_processed = Vec::new();
+
+            for (id, tool) in remaining.iter() {
+                if tool.dependencies.iter().all(|dep| processed.contains(dep)) {
+                    stage.push(tool.clone());
+                    newly_processed.push(id.clone());
+                }
+            }
+
+            stage.sort_by(|a, b| a.name.cmp(&b.name));
+
+            if stage.is_empty() {
+                break;
+            }
+
+            for id in newly_processed {
+                processed.insert(id.clone());
+                remaining.remove(&id);
+            }
+
+            stages.push(stage);
+        }
+
+        stages
+    }
+
+    fn validate_dependencies(
+        items: &HashMap<String, ToolItem>,
+        dependency_map: &HashMap<String, Vec<String>>,
+    ) -> Result<(), ToolError> {
+        for (tool_id, dependencies) in dependency_map {
+            for dependency in dependencies {
+                if !items.contains_key(dependency) {
+                    return Err(ToolError::MissingDependency {
+                        tool_id: tool_id.clone(),
+                        dependency_id: dependency.clone(),
+                    });
+                }
+            }
+        }
+        Ok(())
     }
 
     fn tool_path(&self, tool: &ToolItem) -> PathBuf {

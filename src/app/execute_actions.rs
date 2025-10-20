@@ -48,20 +48,34 @@ impl Execute {
     fn update_dotfiles(&self) {
         self.log_message("Updating dotfiles...\n");
 
-        let jobs = self
+        let tool_groups = self
             .tools
-            .iter()
-            .map(|tool| (tool.name.clone(), self.tools.file_path(tool)))
-            .collect::<Vec<(String, String)>>();
+            .execution_stages()
+            .into_iter()
+            .map(|stage| {
+                stage
+                    .into_iter()
+                    .map(|tool| (tool.name.clone(), self.tools.file_path(&tool)))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
 
         let sender = self.log_sender.clone();
-
         self.runtime.spawn(async move {
-            for (tool_name, file) in jobs {
-                let _ = sender.send(format!("{tool_name} | Updating...\n"));
-                let _ = sender.send(format!("{tool_name} | Running {file}\n"));
+            for stage in tool_groups {
+                let mut handles = Vec::new();
+                for (tool_name, file) in stage {
+                    let sender = sender.clone();
+                    handles.push(tokio::spawn(async move {
+                        let _ = sender.send(format!("{tool_name} | Updating...\n"));
+                        let _ = sender.send(format!("{tool_name} | Running {file}\n"));
+                        Execute::run_tool_script(tool_name, file, sender).await;
+                    }));
+                }
 
-                Execute::run_tool_script(tool_name.clone(), file, sender.clone()).await;
+                for handle in handles {
+                    let _ = handle.await;
+                }
             }
 
             let _ = sender.send("All tools updated successfully.\n".to_string());
