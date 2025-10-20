@@ -27,6 +27,17 @@ impl Dotfiles {
             block = block.border_style(Style::new().fg(Color::Yellow));
         }
 
+        let inner_block = block.clone();
+        block.render(area, buffer);
+        let inner = inner_block.inner(area);
+
+        let [label_area, list_area] =
+            Layout::vertical([Constraint::Length(1), Constraint::Min(1)]).areas(inner);
+
+        Paragraph::new("Tools Settings")
+            .style(Style::new().fg(SLATE.c200))
+            .render(label_area, buffer);
+
         let items = self
             .preferences
             .tools_settings
@@ -35,13 +46,12 @@ impl Dotfiles {
             .map(|item| ListItem::new(item.display_name()))
             .collect::<Vec<ListItem>>();
         let list = List::new(items)
-            .block(block)
             .highlight_style(SELECTED_STYLE)
             .highlight_symbol("> ")
             .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(
             list,
-            area,
+            list_area,
             buffer,
             &mut self.preferences.tools_settings.state,
         );
@@ -49,7 +59,7 @@ impl Dotfiles {
 
     fn render_view(&mut self, area: Rect, buffer: &mut Buffer) {
         let mut block = Block::new()
-            .title(Line::from("View"))
+            .title(Line::from("Tool Details"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::White));
