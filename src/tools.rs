@@ -1,5 +1,5 @@
 use crate::config::Config;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::fs;
 use std::path::PathBuf;
@@ -21,9 +21,6 @@ pub(crate) struct ToolItem {
 
 #[derive(Debug)]
 pub enum ToolError {
-    MissingId {
-        tool_name: String,
-    },
     DuplicateId(String),
     MissingDependency {
         tool_id: String,
@@ -39,12 +36,12 @@ impl Tools {
         let root = config.root().to_string();
         let mut items = HashMap::new();
         let mut dependency_map: HashMap<String, Vec<String>> = HashMap::new();
+        let mut name_counts: HashMap<String, usize> = HashMap::new();
 
         for tool in config.tools() {
-            let id = tool.identifier().ok_or_else(|| ToolError::MissingId {
-                tool_name: tool.name(),
-            })?;
             let dependencies = tool.dependencies();
+            let id = generate_tool_id(&mut name_counts, &items, tool);
+
             if dependencies.iter().any(|dependency| dependency == &id) {
                 return Err(ToolError::SelfDependency(id));
             }
@@ -67,7 +64,6 @@ impl Tools {
         Self::validate_dependencies(&items, &dependency_map)?;
 
         let ordered_ids = Self::topological_order(&items)?;
-
         Ok(Self {
             root,
             ordered_ids,
@@ -94,46 +90,30 @@ impl Tools {
     }
 
     pub(crate) fn execution_stages(&self) -> Vec<Vec<ToolItem>> {
-        let mut remaining: HashMap<String, ToolItem> = self.items.clone();
-        let mut ready: Vec<ToolItem> = remaining
-            .values()
-            .filter(|tool| tool.dependencies.is_empty())
-            .cloned()
-            .collect();
-
+        let mut remaining = self.items.clone();
+        let mut processed = HashSet::new();
         let mut stages = Vec::new();
-        let mut processed: std::collections::HashSet<String> =
-            ready.iter().map(|tool| tool.id.clone()).collect();
-
-        ready.sort_by(|a, b| a.name.cmp(&b.name));
-        if !ready.is_empty() {
-            stages.push(ready.clone());
-        }
-
-        for id in processed.iter() {
-            remaining.remove(id);
-        }
 
         while !remaining.is_empty() {
-            let mut stage = Vec::new();
-            let mut newly_processed = Vec::new();
-
-            for (id, tool) in remaining.iter() {
-                if tool.dependencies.iter().all(|dep| processed.contains(dep)) {
-                    stage.push(tool.clone());
-                    newly_processed.push(id.clone());
-                }
-            }
-
-            stage.sort_by(|a, b| a.name.cmp(&b.name));
+            let mut stage: Vec<ToolItem> = self
+                .ordered_ids
+                .iter()
+                .filter_map(|id| remaining.get(id))
+                .filter(|tool| tool.dependencies.iter().all(|dep| processed.contains(dep)))
+                .cloned()
+                .collect();
 
             if stage.is_empty() {
                 break;
             }
 
-            for id in newly_processed {
-                processed.insert(id.clone());
-                remaining.remove(&id);
+            stage.sort_by(|a, b| a.name.cmp(&b.name));
+
+            for tool in &stage {
+                processed.insert(tool.id.clone());
+            }
+            for tool in &stage {
+                remaining.remove(&tool.id);
             }
 
             stages.push(stage);
@@ -230,12 +210,6 @@ impl Tools {
 impl fmt::Display for ToolError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ToolError::MissingId { tool_name } => {
-                write!(
-                    f,
-                    "Tool '{tool_name}' must declare an Id when using dependencies"
-                )
-            }
             ToolError::DuplicateId(id) => write!(f, "Duplicate tool id detected: {id}"),
             ToolError::MissingDependency {
                 tool_id,
@@ -253,3 +227,33 @@ impl fmt::Display for ToolError {
 }
 
 impl std::error::Error for ToolError {}
+
+fn generate_tool_id(
+    name_counts: &mut HashMap<String, usize>,
+    items: &HashMap<String, ToolItem>,
+    tool: &crate::config::Tool,
+) -> String {
+    if let Some(id) = tool.identifier() {
+        id
+    } else {
+        let mut base = tool.name().to_lowercase().replace(' ', "-");
+        if base.is_empty() {
+            base = "tool".to_string();
+        }
+
+        let count = name_counts.entry(base.clone()).or_insert(0);
+        let mut candidate = if *count == 0 {
+            base.clone()
+        } else {
+            format!("{base}-{}", *count)
+        };
+
+        while items.contains_key(&candidate) {
+            *count += 1;
+            candidate = format!("{base}-{}", *count);
+        }
+
+        *count += 1;
+        candidate
+    }
+}
