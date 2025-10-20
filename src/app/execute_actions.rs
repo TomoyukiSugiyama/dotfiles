@@ -1,16 +1,59 @@
-use super::execute::Execute;
+use super::execute::{Execute, ViewTab};
 use super::execute_log::forward_stream;
 use super::execute_menu::MenuItemAction;
 use std::process::Stdio;
 use tokio::process::Command as TokioCommand;
 use tokio::sync::mpsc;
 
+#[derive(Debug)]
+struct ToolRunResult {
+    name: String,
+    status: ToolRunStatus,
+}
+
+#[derive(Debug)]
+enum ToolRunStatus {
+    Success,
+    Failed { reason: String },
+}
+
+impl ToolRunResult {
+    fn success(name: String) -> Self {
+        Self {
+            name,
+            status: ToolRunStatus::Success,
+        }
+    }
+
+    fn failed(name: String, reason: String) -> Self {
+        Self {
+            name,
+            status: ToolRunStatus::Failed { reason },
+        }
+    }
+
+    fn is_success(&self) -> bool {
+        matches!(self.status, ToolRunStatus::Success)
+    }
+
+    fn failure_reason(&self) -> Option<&str> {
+        match &self.status {
+            ToolRunStatus::Failed { reason } => Some(reason.as_str()),
+            ToolRunStatus::Success => None,
+        }
+    }
+}
+
 impl Execute {
     pub(crate) fn execute_selected(&mut self) {
         if let Some(selected_index) = self.menu.state.selected() {
             let item = &self.menu.items[selected_index];
             match item.action {
-                Some(MenuItemAction::UpdateDotfiles) => self.update_dotfiles(),
+                Some(MenuItemAction::UpdateDotfiles) => {
+                    self.view = ViewTab::Log;
+                    self.pending_scroll_to_bottom = true;
+                    self.update_dotfiles();
+                }
                 None => {}
             };
         }
@@ -62,6 +105,7 @@ impl Execute {
 
         let sender = self.log_sender.clone();
         self.runtime.spawn(async move {
+            let mut all_results = Vec::new();
             for stage in tool_groups {
                 let mut handles = Vec::new();
                 for (tool_name, file) in stage {
@@ -69,16 +113,79 @@ impl Execute {
                     handles.push(tokio::spawn(async move {
                         let _ = sender.send(format!("{tool_name} | Updating...\n"));
                         let _ = sender.send(format!("{tool_name} | Running {file}\n"));
-                        Execute::run_tool_script(tool_name, file, sender).await;
+                        Execute::run_tool_script(tool_name, file, sender).await
                     }));
                 }
 
                 for handle in handles {
-                    let _ = handle.await;
+                    match handle.await {
+                        Ok(result) => all_results.push(result),
+                        Err(join_error) => {
+                            let reason = format!("background task join error: {}", join_error);
+                            let _ =
+                                sender.send(format!("Worker join failure detected: {reason}\n"));
+                            all_results
+                                .push(ToolRunResult::failed("<unknown>".to_string(), reason));
+                        }
+                    }
                 }
             }
 
-            let _ = sender.send("All tools updated successfully.\n".to_string());
+            if all_results.is_empty() {
+                let _ = sender.send("No tools were scheduled for update.\n".to_string());
+                return;
+            }
+
+            let successes = all_results
+                .iter()
+                .filter(|result| result.is_success())
+                .map(|result| result.name.as_str())
+                .collect::<Vec<_>>();
+            let failures = all_results
+                .iter()
+                .filter(|result| !result.is_success())
+                .collect::<Vec<_>>();
+            let has_failures = !failures.is_empty();
+
+            let _ = sender.send("\n----- Update Summary -----\n".to_string());
+            let _ = sender.send(format!(
+                "Status: {}\n",
+                if has_failures { "FAILED" } else { "SUCCESS" }
+            ));
+            let _ = sender.send(format!(
+                "Succeeded: {}/{}\n",
+                successes.len(),
+                all_results.len()
+            ));
+
+            if has_failures {
+                let _ = sender.send("Failed tools:\n".to_string());
+                for failure in &failures {
+                    let failure = *failure;
+                    let reason = failure
+                        .failure_reason()
+                        .map(|text| text.trim())
+                        .filter(|text| !text.is_empty())
+                        .unwrap_or("no additional details");
+                    let _ = sender.send(format!("  - {} ({})\n", failure.name, reason));
+                }
+            } else {
+                let _ = sender.send("Failed: none\n".to_string());
+            }
+
+            if !successes.is_empty() {
+                let _ = sender.send("Successful tools:\n".to_string());
+                for name in successes {
+                    let _ = sender.send(format!("  - {}\n", name));
+                }
+            }
+
+            let final_status = if has_failures {
+                "Update finished with errors. See summary above.\n"
+            } else {
+                "Update completed successfully.\n"
+            };
+            let _ = sender.send(final_status.to_string());
         });
     }
 
@@ -90,7 +197,7 @@ impl Execute {
         tool_name: String,
         file: String,
         sender: mpsc::UnboundedSender<String>,
-    ) {
+    ) -> ToolRunResult {
         let command = TokioCommand::new("zsh")
             .arg("-c")
             .arg(file)
@@ -107,8 +214,9 @@ impl Execute {
                     std::io::ErrorKind::Other => "unknown error",
                     _ => "unknown error",
                 };
-                let _ = sender.send(format!("Failed to spawn command: {e}\n{hint}"));
-                return;
+                let message = format!("Failed to spawn command: {e}\n{hint}\n");
+                let _ = sender.send(message.clone());
+                return ToolRunResult::failed(tool_name, format!("failed to spawn command: {e}"));
             }
         };
 
@@ -144,9 +252,15 @@ impl Execute {
                 let _ = sender.send(format!(
                     "{tool_name} | Command exited with status: {status}\n"
                 ));
+                if status.success() {
+                    ToolRunResult::success(tool_name)
+                } else {
+                    ToolRunResult::failed(tool_name, format!("command exited with status {status}"))
+                }
             }
             Err(e) => {
                 let _ = sender.send(format!("{tool_name} | Command failed with error: {e}\n"));
+                ToolRunResult::failed(tool_name, format!("command failed with error: {e}"))
             }
         }
     }
