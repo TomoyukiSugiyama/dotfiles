@@ -221,7 +221,7 @@ impl Execute {
         };
 
         let stdout_prefix = format!("{tool_name} | ");
-        let stderr_prefix = format!("{tool_name} | error: ");
+        let stderr_prefix = format!("{tool_name} | ");
         let stdout_task = child.stdout.take().map(|stdout| {
             let sender = sender.clone();
             let prefix = stdout_prefix.clone();
