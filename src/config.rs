@@ -29,12 +29,16 @@ struct Preferences {
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Tool {
+    #[serde(rename = "Id", default)]
+    pub id: Option<String>,
     #[serde(rename = "Name", default)]
     pub name: Option<String>,
     #[serde(rename = "Root", default)]
     pub root: Option<String>,
     #[serde(rename = "File", default)]
     pub file: Option<String>,
+    #[serde(rename = "Dependencies", default)]
+    pub dependencies: Vec<String>,
 }
 
 impl Config {
@@ -78,14 +82,20 @@ impl Config {
                 "SystemPreferences:\n",
                 "  Root: ~/.dotfiles\n",
                 "# Preferences.ToolsSettings: list of tools to manage\n",
+                "#   Id: Optional unique identifier used to reference dependencies\n",
                 "#   Name: Optional display label (defaults to Root or 'unknown')\n",
                 "#   Root: Optional directory segment; defaults to lowercase Name\n",
                 "#   File: Optional script filename; defaults to '<name>-settings.zsh'\n",
+                "#   Dependencies: List other tool Ids this tool requires (never include its own Id)\n",
                 "Preferences:\n",
                 "  ToolsSettings:\n",
                 "    # - Name: Brew            # Label shown in the UI\n",
                 "    #   Root: brew            # Directory (under SystemPreferences.Root) that contains the tool's scripts\n",
                 "    #   File: brew-settings.zsh # Script executed when running the tool\n",
+                "    # - Id: gcloud\n",
+                "    #   Name: Google Cloud SDK\n",
+                "    #   Dependencies:\n",
+                "    #     - brew              # Reference another tool Id defined above (e.g., Brew)\n",
             );
             fs::write(&config_file, DEFAULT_CONFIG)?;
         }
@@ -127,6 +137,13 @@ impl Config {
 }
 
 impl Tool {
+    pub fn identifier(&self) -> Option<String> {
+        self.id
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+            .map(|value| value.to_string())
+    }
     pub fn name(&self) -> String {
         self.name.clone().unwrap_or_else(|| "unknown".to_string())
     }
@@ -140,6 +157,14 @@ impl Tool {
         self.file
             .clone()
             .unwrap_or_else(|| format!("{}-settings.zsh", self.name().to_lowercase()))
+    }
+    pub fn dependencies(&self) -> Vec<String> {
+        self.dependencies
+            .iter()
+            .map(|dependency| dependency.trim())
+            .filter(|dependency| !dependency.is_empty())
+            .map(|dependency| dependency.to_string())
+            .collect()
     }
 }
 fn expand_home_path(path: &str) -> PathBuf {

@@ -48,29 +48,28 @@ impl Execute {
     fn update_dotfiles(&self) {
         self.log_message("Updating dotfiles...\n");
 
-        for tool in &self.tools.items {
-            let file = self.tools.file_path(tool);
-            self.log_tool_start(&tool.name, &file);
-            self.spawn_tool_update_task(&tool.name, file);
-        }
-        self.log_message("All tools updated successfully.\n");
+        let jobs = self
+            .tools
+            .iter()
+            .map(|tool| (tool.name.clone(), self.tools.file_path(tool)))
+            .collect::<Vec<(String, String)>>();
+
+        let sender = self.log_sender.clone();
+
+        self.runtime.spawn(async move {
+            for (tool_name, file) in jobs {
+                let _ = sender.send(format!("{tool_name} | Updating...\n"));
+                let _ = sender.send(format!("{tool_name} | Running {file}\n"));
+
+                Execute::run_tool_script(tool_name.clone(), file, sender.clone()).await;
+            }
+
+            let _ = sender.send("All tools updated successfully.\n".to_string());
+        });
     }
 
     fn log_message<S: Into<String>>(&self, message: S) {
         let _ = self.log_sender.send(message.into());
-    }
-
-    fn log_tool_start(&self, tool_name: &str, file: &str) {
-        self.log_message(format!("{tool_name} | Updating...\n"));
-        self.log_message(format!("{tool_name} | Running {file}\n"));
-    }
-
-    fn spawn_tool_update_task(&self, tool_name: &str, file: String) {
-        let sender = self.log_sender.clone();
-        let tool_name = tool_name.to_string();
-        self.runtime.spawn(async move {
-            Self::run_tool_script(tool_name, file, sender).await;
-        });
     }
 
     async fn run_tool_script(

@@ -15,10 +15,11 @@ mod tabs;
 mod tabs_ui;
 
 use color_eyre::Result;
-use dotfiles::Dotfiles;
 use execute::Execute;
 use ratatui::DefaultTerminal;
 use tabs::SelectedTab;
+
+pub(crate) use dotfiles::Dotfiles;
 
 pub(crate) struct App {
     /// Is the application running?

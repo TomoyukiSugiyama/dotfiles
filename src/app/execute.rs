@@ -1,6 +1,5 @@
-use crate::tools::Tools;
-
 use super::execute_menu::Menu;
+use crate::tools::Tools;
 
 use super::execute_menu::MenuItemAction;
 use std::collections::VecDeque;
@@ -53,7 +52,9 @@ impl Execute {
             view_height: 0,
             pending_scroll_to_bottom: false,
             view: ViewTab::Menu,
-            tools: Tools::new(),
+            tools: Tools::new().unwrap_or_else(|error| {
+                panic!("Failed to build tools: {:?}", error);
+            }),
         }
     }
 }

@@ -31,7 +31,6 @@ impl Dotfiles {
             .preferences
             .tools_settings
             .tools
-            .items
             .iter()
             .map(|item| ListItem::new(item.name.clone()))
             .collect::<Vec<ListItem>>();
@@ -64,7 +63,7 @@ impl Dotfiles {
             .tools_settings
             .state
             .selected()
-            .and_then(|index| self.preferences.tools_settings.tools.items.get(index))
+            .and_then(|index| self.preferences.tools_settings.tools.get_by_index(index))
             .map(|item| {
                 let script = self
                     .preferences

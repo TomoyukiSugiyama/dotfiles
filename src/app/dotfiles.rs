@@ -34,7 +34,9 @@ impl Dotfiles {
     pub(crate) fn new() -> Self {
         let mut tools_settings = ToolsSettings {
             state: ListState::default(),
-            tools: Tools::new(),
+            tools: Tools::new().unwrap_or_else(|error| {
+                panic!("Failed to build tools: {:?}", error);
+            }),
         };
         tools_settings.state.select_first();
 
