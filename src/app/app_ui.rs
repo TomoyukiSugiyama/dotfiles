@@ -16,7 +16,7 @@ impl App {
     fn render_inner(&mut self, area: Rect, buffer: &mut Buffer) {
         match self.selected_tab {
             SelectedTab::Dotfiles => self.dotfiles.render(area, buffer),
-            SelectedTab::Execute => self.execute.render(area, buffer),
+            SelectedTab::Workflow => self.workflow.render(area, buffer),
         }
     }
 

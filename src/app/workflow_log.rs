@@ -1,4 +1,4 @@
-use super::execute::Execute;
+use super::workflow::Workflow;
 use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 use tokio::sync::mpsc;
 
@@ -35,7 +35,7 @@ pub(crate) async fn forward_stream<R>(
 
 const MAX_LOG_LINES: usize = 1000;
 
-impl Execute {
+impl Workflow {
     pub(crate) fn drain_log_messages(&mut self) {
         while let Ok(message) = self.log_receiver.try_recv() {
             if self.log_lines.len() >= MAX_LOG_LINES {

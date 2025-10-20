@@ -1,6 +1,6 @@
-use super::execute::{Execute, ViewTab};
-use super::execute_log::forward_stream;
-use super::execute_menu::MenuItemAction;
+use super::workflow::{ViewTab, Workflow};
+use super::workflow_log::forward_stream;
+use super::workflow_menu::MenuItemAction;
 use std::process::Stdio;
 use tokio::process::Command as TokioCommand;
 use tokio::sync::mpsc;
@@ -44,7 +44,7 @@ impl ToolRunResult {
     }
 }
 
-impl Execute {
+impl Workflow {
     pub(crate) fn execute_selected(&mut self) {
         if let Some(selected_index) = self.menu.state.selected() {
             let item = &self.menu.items[selected_index];
@@ -113,7 +113,7 @@ impl Execute {
                     handles.push(tokio::spawn(async move {
                         let _ = sender.send(format!("{tool_name} | Updating...\n"));
                         let _ = sender.send(format!("{tool_name} | Running {file}\n"));
-                        Execute::run_tool_script(tool_name, file, sender).await
+                        Workflow::run_tool_script(tool_name, file, sender).await
                     }));
                 }
 

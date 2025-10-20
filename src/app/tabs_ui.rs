@@ -12,7 +12,7 @@ impl SelectedTab {
     pub(crate) fn title(self) -> Line<'static> {
         let title = match self {
             SelectedTab::Dotfiles => "Dotfiles",
-            SelectedTab::Execute => "Execute",
+            SelectedTab::Workflow => "Workflow",
         };
         Line::from(format!("  {title}  "))
     }

@@ -1,9 +1,9 @@
-use super::execute::Execute;
-use super::execute::ViewTab;
+use super::workflow::Workflow;
+use super::workflow::ViewTab;
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
 
-impl Execute {
+impl Workflow {
     /// Handles the key events and updates the state of [`App`].
     pub fn on_key_event(&mut self, key: KeyEvent) {
         match (key.modifiers, key.code) {

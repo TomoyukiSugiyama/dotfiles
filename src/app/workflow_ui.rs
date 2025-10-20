@@ -1,5 +1,4 @@
-use super::execute::Execute;
-use super::execute::ViewTab;
+use super::workflow::{ViewTab, Workflow};
 use ratatui::layout::{Constraint, Layout};
 use ratatui::style::palette::tailwind::SLATE;
 use ratatui::style::{Color, Modifier, Style};
@@ -12,7 +11,7 @@ use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget};
 
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
 
-impl Execute {
+impl Workflow {
     fn render_menu(&mut self, area: Rect, buffer: &mut Buffer, focused: bool) {
         let mut block = Block::new()
             .title(Line::from("Menu"))
@@ -63,7 +62,7 @@ impl Execute {
     }
 }
 
-impl Widget for &mut Execute {
+impl Widget for &mut Workflow {
     fn render(self, area: Rect, buffer: &mut Buffer) {
         let [menu_area, log_area] =
             Layout::vertical([Constraint::Percentage(10), Constraint::Percentage(90)]).areas(area);

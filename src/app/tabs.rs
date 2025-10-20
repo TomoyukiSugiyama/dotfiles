@@ -5,25 +5,25 @@ pub(crate) enum SelectedTab {
     #[default]
     #[strum(to_string = "Dotfiles")]
     Dotfiles,
-    #[strum(to_string = "Execute")]
-    Execute,
+    #[strum(to_string = "Workflow")]
+    Workflow,
 }
 
 impl SelectedTab {
     pub fn new() -> Self {
-        Self::Execute
+        Self::Workflow
     }
 
     fn next(self) -> Self {
         match self {
-            SelectedTab::Dotfiles => SelectedTab::Execute,
-            SelectedTab::Execute => SelectedTab::Dotfiles,
+            SelectedTab::Dotfiles => SelectedTab::Workflow,
+            SelectedTab::Workflow => SelectedTab::Dotfiles,
         }
     }
     fn previous(self) -> Self {
         match self {
-            SelectedTab::Dotfiles => SelectedTab::Execute,
-            SelectedTab::Execute => SelectedTab::Dotfiles,
+            SelectedTab::Dotfiles => SelectedTab::Workflow,
+            SelectedTab::Workflow => SelectedTab::Dotfiles,
         }
     }
 

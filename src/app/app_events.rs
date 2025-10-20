@@ -32,7 +32,7 @@ impl App {
                 if self.selected_tab == SelectedTab::Dotfiles {
                     self.dotfiles.on_key_event(key)
                 } else {
-                    self.execute.on_key_event(key)
+                    self.workflow.on_key_event(key)
                 }
             }
         }

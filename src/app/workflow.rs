@@ -1,7 +1,7 @@
-use super::execute_menu::Menu;
+use super::workflow_menu::Menu;
 use crate::tools::Tools;
 
-use super::execute_menu::MenuItemAction;
+use super::workflow_menu::MenuItemAction;
 use std::collections::VecDeque;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
@@ -21,7 +21,7 @@ impl ViewTab {
     }
 }
 
-pub(crate) struct Execute {
+pub(crate) struct Workflow {
     pub menu: Menu,
     pub runtime: Runtime,
     pub log_sender: mpsc::UnboundedSender<String>,
@@ -34,7 +34,7 @@ pub(crate) struct Execute {
     pub tools: Tools,
 }
 
-impl Execute {
+impl Workflow {
     pub fn new() -> Self {
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
         let mut menu = Menu::from_iter([(
