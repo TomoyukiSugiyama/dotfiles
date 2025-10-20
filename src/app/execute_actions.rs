@@ -53,6 +53,7 @@ impl Execute {
             self.log_tool_start(&tool.name, &file);
             self.spawn_tool_update_task(&tool.name, file);
         }
+        self.log_message("All tools updated successfully.\n");
     }
 
     fn log_message<S: Into<String>>(&self, message: S) {

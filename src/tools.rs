@@ -1,3 +1,4 @@
+use crate::config::Config;
 use std::fs;
 use std::path::PathBuf;
 pub(crate) struct Tools {
@@ -13,20 +14,18 @@ pub(crate) struct ToolItem {
 
 impl Tools {
     pub(crate) fn new() -> Self {
+        let config = Config::new().expect("Failed to load config");
         Self {
-            root: "~/.dotfiles".to_string(),
-            items: vec![
-                ToolItem {
-                    name: "Brew".to_string(),
-                    root: "brew".to_string(),
-                    file: "brew-settings.zsh".to_string(),
-                },
-                ToolItem {
-                    name: "Gcloud".to_string(),
-                    root: "gcloud".to_string(),
-                    file: "gcloud-settings.zsh".to_string(),
-                },
-            ],
+            root: config.root().to_string(),
+            items: config
+                .tools()
+                .iter()
+                .map(|tool| ToolItem {
+                    name: tool.name(),
+                    root: tool.root_name(),
+                    file: tool.file_name(),
+                })
+                .collect(),
         }
     }
 
@@ -46,11 +45,12 @@ impl Tools {
     }
 
     fn expand_home_path(&self, path: &str) -> PathBuf {
-        if let Some(stripped) = path.strip_prefix("~/") {
-            if let Ok(home) = std::env::var("HOME") {
-                return PathBuf::from(home).join(stripped);
-            }
+        if let Some(stripped) = path.strip_prefix("~/")
+            && let Ok(home) = std::env::var("HOME")
+        {
+            PathBuf::from(home).join(stripped)
+        } else {
+            PathBuf::from(path)
         }
-        PathBuf::from(path)
     }
 }
