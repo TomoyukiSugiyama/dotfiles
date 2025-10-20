@@ -46,18 +46,25 @@ impl Workflow {
             block = block.border_style(Style::new().fg(Color::Yellow));
         }
 
-        self.view_height = block.inner(area).height as usize;
+        let inner = block.inner(area);
+        self.view_height = inner.height as usize;
         if self.pending_scroll_to_bottom {
             self.scroll_log_to_bottom();
             self.pending_scroll_to_bottom = false;
         }
-        let text: String = self
+        let mut lines: Vec<String> = self
             .log_lines
             .iter()
             .skip(self.log_scroll as usize)
             .take(self.view_height)
             .cloned()
             .collect();
+
+        if let Some(message) = self.reload_warning.as_ref() {
+            lines.insert(0, format!("WARN: {message}"));
+        }
+
+        let text = lines.join("");
         Paragraph::new(text).block(block).render(area, buffer);
     }
 }

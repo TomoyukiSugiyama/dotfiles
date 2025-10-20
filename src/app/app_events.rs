@@ -28,6 +28,12 @@ impl App {
             | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
             (_, KeyCode::Left) => self.selected_tab.select_previous_tab(),
             (_, KeyCode::Right) => self.selected_tab.select_next_tab(),
+            (_, KeyCode::Char('r' | 'R')) => {
+                if let Err(message) = self.reload_config() {
+                    self.dotfiles.show_reload_error(message.clone());
+                    self.workflow.show_reload_error(message);
+                }
+            }
             _ => {
                 if self.selected_tab == SelectedTab::Dotfiles {
                     self.dotfiles.on_key_event(key)

@@ -1,4 +1,6 @@
 use super::dotfiles::Dotfiles;
+use crate::tools::Tools;
+use ratatui::widgets::ListState;
 
 impl Dotfiles {
     pub(crate) fn scroll_script(&mut self, amount: i16) {
@@ -33,5 +35,51 @@ impl Dotfiles {
     pub(crate) fn reset_script_view(&mut self) {
         self.script_scroll = 0;
         self.script_lines.clear();
+    }
+
+    pub(crate) fn apply_tools(&mut self, tools: Tools) {
+        let previous_id = self
+            .preferences
+            .tools_settings
+            .state
+            .selected()
+            .and_then(|index| {
+                self.preferences
+                    .tools_settings
+                    .tools
+                    .get_by_index(index)
+                    .map(|tool| tool.id.clone())
+            });
+
+        let selected_index = previous_id
+            .as_deref()
+            .and_then(|target_id| tools.index_of(target_id))
+            .or_else(|| tools.get_by_index(0).map(|_| 0));
+
+        let mut state = ListState::default();
+        if let Some(index) = selected_index {
+            state.select(Some(index));
+        }
+
+        self.reload_error = None;
+        self.reload_warning = None;
+        self.preferences.tools_settings.tools = tools;
+        self.preferences.tools_settings.state = state;
+        self.reset_script_view();
+    }
+
+    pub(crate) fn show_reload_error(&mut self, message: String) {
+        self.script_scroll = 0;
+        self.script_lines.clear();
+        self.reload_error = Some(message);
+    }
+
+    pub(crate) fn show_reload_warning(&mut self, message: String) {
+        self.reload_error = None;
+        self.reload_warning = Some(message);
+    }
+
+    pub(crate) fn clear_reload_warning(&mut self) {
+        self.reload_warning = None;
     }
 }

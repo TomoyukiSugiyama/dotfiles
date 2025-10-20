@@ -1,5 +1,5 @@
-use super::workflow::Workflow;
 use super::workflow::ViewTab;
+use super::workflow::Workflow;
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
 

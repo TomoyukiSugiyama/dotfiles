@@ -8,6 +8,8 @@ pub(crate) struct Dotfiles {
     pub script_lines: VecDeque<String>,
     pub script_scroll: u16,
     pub view_height: usize,
+    pub reload_error: Option<String>,
+    pub reload_warning: Option<String>,
 }
 
 pub(crate) struct Preferences {
@@ -51,6 +53,8 @@ impl Dotfiles {
             script_lines: VecDeque::new(),
             script_scroll: 0,
             view_height: 0,
+            reload_error: None,
+            reload_warning: None,
         }
     }
 }

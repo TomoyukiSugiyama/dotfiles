@@ -22,7 +22,7 @@ impl App {
 
     fn render_footer(&mut self, area: Rect, buffer: &mut Buffer) {
         Paragraph::new(
-            "Use ←/→ to switch tabs, ↓/↑ to move, Tab to change pane, Enter to run, Home/End to jump, q/Esc to quit.",
+            "Use ←/→ to switch tabs, ↓/↑ to move, Tab to change pane, Enter to run, R to reload config, Home/End to jump, q/Esc to quit.",
         )
             .centered()
             .render(area, buffer);

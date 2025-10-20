@@ -1,6 +1,7 @@
 use super::workflow::{ViewTab, Workflow};
 use super::workflow_log::forward_stream;
 use super::workflow_menu::MenuItemAction;
+use crate::tools::Tools;
 use std::process::Stdio;
 use tokio::process::Command as TokioCommand;
 use tokio::sync::mpsc;
@@ -45,6 +46,24 @@ impl ToolRunResult {
 }
 
 impl Workflow {
+    pub(crate) fn apply_tools(&mut self, tools: Tools) {
+        self.tools = tools;
+        self.reload_warning = None;
+    }
+
+    pub(crate) fn show_reload_warning(&mut self, message: String) {
+        self.reload_warning = Some(message);
+    }
+
+    pub(crate) fn clear_reload_warning(&mut self) {
+        self.reload_warning = None;
+    }
+
+    pub(crate) fn show_reload_error(&mut self, message: String) {
+        self.log_lines.push_back(format!("{message}\n"));
+        self.pending_scroll_to_bottom = true;
+    }
+
     pub(crate) fn execute_selected(&mut self) {
         if let Some(selected_index) = self.menu.state.selected() {
             let item = &self.menu.items[selected_index];

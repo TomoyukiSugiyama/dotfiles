@@ -5,19 +5,19 @@ mod dotfiles;
 mod dotfiles_actions;
 mod dotfiles_events;
 mod dotfiles_ui;
+mod tabs;
+mod tabs_ui;
 mod workflow;
 mod workflow_actions;
 mod workflow_events;
 mod workflow_log;
 mod workflow_menu;
 mod workflow_ui;
-mod tabs;
-mod tabs_ui;
 
 use color_eyre::Result;
-use workflow::Workflow;
 use ratatui::DefaultTerminal;
 use tabs::SelectedTab;
+use workflow::Workflow;
 
 pub(crate) use dotfiles::Dotfiles;
 

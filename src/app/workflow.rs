@@ -32,15 +32,13 @@ pub(crate) struct Workflow {
     pub pending_scroll_to_bottom: bool,
     pub view: ViewTab,
     pub tools: Tools,
+    pub reload_warning: Option<String>,
 }
 
 impl Workflow {
     pub fn new() -> Self {
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
-        let mut menu = Menu::from_iter([(
-            "Run Tools".to_string(),
-            Some(MenuItemAction::RunTools),
-        )]);
+        let mut menu = Menu::from_iter([("Run Tools".to_string(), Some(MenuItemAction::RunTools))]);
         menu.state.select_first();
         Self {
             menu,
@@ -55,6 +53,7 @@ impl Workflow {
             tools: Tools::new().unwrap_or_else(|error| {
                 panic!("Failed to build tools: {:?}", error);
             }),
+            reload_warning: None,
         }
     }
 }

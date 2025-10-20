@@ -68,6 +68,13 @@ impl Dotfiles {
         block.render(area, buffer);
         let inner = inner_block.inner(area);
 
+        if let Some(message) = self.reload_error.as_ref() {
+            Paragraph::new(message.as_str())
+                .style(Style::new().fg(Color::Red))
+                .render(inner, buffer);
+            return;
+        }
+
         let Some(selected_tool) = self
             .preferences
             .tools_settings
@@ -99,13 +106,29 @@ impl Dotfiles {
         );
 
         let dependency_map_text = dependency_map.join("\n");
-        let chunks = Layout::vertical([
+        let mut constraints = Vec::new();
+        if let Some(message) = self.reload_warning.as_ref() {
+            let lines = message.lines().count().max(1) as u16 + 1;
+            constraints.push(Constraint::Length(lines));
+        }
+        constraints.extend([
             Constraint::Length(7),
             Constraint::Length((dependency_map_text.lines().count() + 2) as u16),
             Constraint::Min(3),
-        ])
-        .split(inner);
-        Paragraph::new(info_text).render(chunks[0], buffer);
+        ]);
+
+        let chunks = Layout::vertical(constraints).split(inner);
+
+        let mut chunk_index = 0;
+        if let Some(message) = self.reload_warning.as_ref() {
+            Paragraph::new(message.as_str())
+                .style(Style::new().fg(Color::Yellow))
+                .render(chunks[chunk_index], buffer);
+            chunk_index += 1;
+        }
+
+        Paragraph::new(info_text).render(chunks[chunk_index], buffer);
+        chunk_index += 1;
 
         let map_block = Block::new()
             .title(Line::from("Dependency Map (* current tool)"))
@@ -114,7 +137,8 @@ impl Dotfiles {
             .border_style(Style::new().fg(Color::White));
         Paragraph::new(dependency_map_text)
             .block(map_block)
-            .render(chunks[1], buffer);
+            .render(chunks[chunk_index], buffer);
+        chunk_index += 1;
 
         let mut script_block = Block::new()
             .title(Line::from("Script"))
@@ -124,7 +148,8 @@ impl Dotfiles {
         if self.view == ViewTab::Script {
             script_block = script_block.border_style(Style::new().fg(Color::Yellow));
         }
-        self.view_height = script_block.inner(chunks[2]).height as usize;
+        let script_chunk = chunks[chunk_index];
+        self.view_height = script_block.inner(script_chunk).height as usize;
         self.script_lines = script.lines().map(|line| format!("  {line}")).collect();
         let text = self
             .script_lines
@@ -136,9 +161,8 @@ impl Dotfiles {
             .join("\n");
         Paragraph::new(text)
             .block(script_block)
-            .render(chunks[2], buffer);
+            .render(script_chunk, buffer);
     }
-
 }
 
 impl Widget for &mut Dotfiles {

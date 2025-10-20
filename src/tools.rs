@@ -4,6 +4,7 @@ use std::fmt;
 use std::fs;
 use std::path::PathBuf;
 
+#[derive(Clone)]
 pub(crate) struct Tools {
     pub root: String,
     ordered_ids: Vec<String>,
@@ -27,6 +28,7 @@ impl ToolItem {
 
 #[derive(Debug)]
 pub enum ToolError {
+    ConfigLoad(String),
     DuplicateId(String),
     MissingDependency {
         tool_id: String,
@@ -38,7 +40,16 @@ pub enum ToolError {
 
 impl Tools {
     pub(crate) fn new() -> Result<Self, ToolError> {
-        let config = Config::new().expect("Failed to load config");
+        let (tools, _) = Self::load(true)?;
+        Ok(tools)
+    }
+
+    pub(crate) fn new_relaxed() -> Result<(Self, Vec<String>), ToolError> {
+        Self::load(false)
+    }
+
+    fn load(strict: bool) -> Result<(Self, Vec<String>), ToolError> {
+        let config = Config::new().map_err(|error| ToolError::ConfigLoad(error.to_string()))?;
         let root = config.root().to_string();
         let mut items = HashMap::new();
         let mut dependency_map: HashMap<String, Vec<String>> = HashMap::new();
@@ -67,14 +78,41 @@ impl Tools {
             );
         }
 
+        let mut warnings = Vec::new();
+        if !strict {
+            let valid_ids: HashSet<_> = items.keys().cloned().collect();
+            for (tool_id, item) in items.iter_mut() {
+                let mut retained = Vec::with_capacity(item.dependencies.len());
+                for dependency in std::mem::take(&mut item.dependencies) {
+                    if valid_ids.contains(&dependency) {
+                        retained.push(dependency);
+                    } else {
+                        warnings.push(format!(
+                            "Tool '{}' references missing dependency '{}'",
+                            tool_id, dependency
+                        ));
+                    }
+                }
+                item.dependencies = retained;
+            }
+
+            dependency_map = items
+                .iter()
+                .map(|(id, item)| (id.clone(), item.dependencies.clone()))
+                .collect();
+        }
+
         Self::validate_dependencies(&items, &dependency_map)?;
 
         let ordered_ids = Self::topological_order(&items)?;
-        Ok(Self {
-            root,
-            ordered_ids,
-            items,
-        })
+        Ok((
+            Self {
+                root,
+                ordered_ids,
+                items,
+            },
+            warnings,
+        ))
     }
 
     pub(crate) fn iter(&self) -> impl Iterator<Item = &ToolItem> {
@@ -93,6 +131,10 @@ impl Tools {
 
     pub(crate) fn raw_script(&self, tool: &ToolItem) -> Option<String> {
         fs::read_to_string(self.tool_path(tool)).ok()
+    }
+
+    pub(crate) fn index_of(&self, tool_id: &str) -> Option<usize> {
+        self.ordered_ids.iter().position(|id| id == tool_id)
     }
 
     pub(crate) fn execution_stages(&self) -> Vec<Vec<ToolItem>> {
@@ -342,6 +384,9 @@ impl Tools {
 impl fmt::Display for ToolError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            ToolError::ConfigLoad(message) => {
+                write!(f, "Failed to load config: {message}")
+            }
             ToolError::DuplicateId(id) => write!(f, "Duplicate tool id detected: {id}"),
             ToolError::MissingDependency {
                 tool_id,
