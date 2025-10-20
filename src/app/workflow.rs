@@ -38,8 +38,8 @@ impl Workflow {
     pub fn new() -> Self {
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
         let mut menu = Menu::from_iter([(
-            "Update Dotfiles".to_string(),
-            Some(MenuItemAction::UpdateDotfiles),
+            "Run Tools".to_string(),
+            Some(MenuItemAction::RunTools),
         )]);
         menu.state.select_first();
         Self {

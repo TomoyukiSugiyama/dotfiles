@@ -49,10 +49,10 @@ impl Workflow {
         if let Some(selected_index) = self.menu.state.selected() {
             let item = &self.menu.items[selected_index];
             match item.action {
-                Some(MenuItemAction::UpdateDotfiles) => {
+                Some(MenuItemAction::RunTools) => {
                     self.view = ViewTab::Log;
                     self.pending_scroll_to_bottom = true;
-                    self.update_dotfiles();
+                    self.run_tools();
                 }
                 None => {}
             };
@@ -88,8 +88,8 @@ impl Workflow {
         self.log_scroll = 0;
     }
 
-    fn update_dotfiles(&self) {
-        self.log_message("Updating dotfiles...\n");
+    fn run_tools(&self) {
+        self.log_message("Running tools...\n");
 
         let tool_groups = self
             .tools
@@ -111,7 +111,7 @@ impl Workflow {
                 for (tool_name, file) in stage {
                     let sender = sender.clone();
                     handles.push(tokio::spawn(async move {
-                        let _ = sender.send(format!("{tool_name} | Updating...\n"));
+                        let _ = sender.send(format!("{tool_name} | Starting...\n"));
                         let _ = sender.send(format!("{tool_name} | Running {file}\n"));
                         Workflow::run_tool_script(tool_name, file, sender).await
                     }));
@@ -132,7 +132,7 @@ impl Workflow {
             }
 
             if all_results.is_empty() {
-                let _ = sender.send("No tools were scheduled for update.\n".to_string());
+                let _ = sender.send("No tools were scheduled to run.\n".to_string());
                 return;
             }
 
@@ -147,7 +147,7 @@ impl Workflow {
                 .collect::<Vec<_>>();
             let has_failures = !failures.is_empty();
 
-            let _ = sender.send("\n----- Update Summary -----\n".to_string());
+            let _ = sender.send("\n----- Tool Run Summary -----\n".to_string());
             let _ = sender.send(format!(
                 "Status: {}\n",
                 if has_failures { "FAILED" } else { "SUCCESS" }
@@ -181,9 +181,9 @@ impl Workflow {
             }
 
             let final_status = if has_failures {
-                "Update finished with errors. See summary above.\n"
+                "Tool run finished with errors. See summary above.\n"
             } else {
-                "Update completed successfully.\n"
+                "Tool run completed successfully.\n"
             };
             let _ = sender.send(final_status.to_string());
         });
