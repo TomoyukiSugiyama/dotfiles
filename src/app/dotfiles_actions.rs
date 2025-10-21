@@ -3,7 +3,6 @@ use crate::tools::Tools;
 use ratatui::widgets::ListState;
 
 impl Dotfiles {
-
     pub(crate) fn select_next_tool(&mut self) {
         let previous = self.preferences.tools_settings.state.selected();
         self.preferences.tools_settings.state.select_next();

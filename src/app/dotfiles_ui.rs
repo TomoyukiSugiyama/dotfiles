@@ -15,6 +15,13 @@ use ratatui::widgets::{
 
 const SELECTED_STYLE: Style = Style::new().bg(SLATE.c800).add_modifier(Modifier::BOLD);
 
+struct ToolViewData {
+    info_text: String,
+    dependency_map_text: String,
+    dependency_map_height: u16,
+    script: String,
+}
+
 impl Dotfiles {
     fn render_menu(&mut self, area: Rect, buffer: &mut Buffer) {
         let mut block = Block::new()
@@ -34,10 +41,18 @@ impl Dotfiles {
         let [label_area, list_area] =
             Layout::vertical([Constraint::Length(1), Constraint::Min(1)]).areas(inner);
 
-        Paragraph::new("Tools Settings")
-            .style(Style::new().fg(SLATE.c200))
-            .render(label_area, buffer);
+        self.render_label(label_area, buffer);
 
+        self.render_list(list_area, buffer);
+    }
+
+    fn render_label(&mut self, area: Rect, buffer: &mut Buffer) {
+        let label = "Tools Settings";
+        Paragraph::new(label)
+            .style(Style::new().fg(SLATE.c200))
+            .render(area, buffer);
+    }
+    fn render_list(&mut self, area: Rect, buffer: &mut Buffer) {
         let items = self
             .preferences
             .tools_settings
@@ -51,13 +66,43 @@ impl Dotfiles {
             .highlight_spacing(HighlightSpacing::Always);
         StatefulWidget::render(
             list,
-            list_area,
+            area,
             buffer,
             &mut self.preferences.tools_settings.state,
         );
     }
-
     fn render_view(&mut self, area: Rect, buffer: &mut Buffer) {
+        let inner = Self::render_tool_details_container(area, buffer);
+
+        if self.render_reload_error(inner, buffer) {
+            return;
+        }
+
+        let Some(data) = self.build_tool_view_data() else {
+            self.render_tool_selection_prompt(inner, buffer);
+            return;
+        };
+
+        let chunks = self.tool_details_layout(inner, &data);
+        let mut chunk_index = 0;
+
+        if let Some(message) = self.reload_warning.as_ref() {
+            Paragraph::new(message.as_str())
+                .style(Style::new().fg(Color::Yellow))
+                .render(chunks[chunk_index], buffer);
+            chunk_index += 1;
+        }
+
+        self.render_info_section(chunks[chunk_index], buffer, &data);
+        chunk_index += 1;
+
+        self.render_dependency_map_section(chunks[chunk_index], buffer, &data);
+        chunk_index += 1;
+
+        self.render_script_section(chunks[chunk_index], buffer, data.script.as_str());
+    }
+
+    fn render_tool_details_container(area: Rect, buffer: &mut Buffer) -> Rect {
         let block = Block::new()
             .title(Line::from("Tool Details"))
             .borders(Borders::ALL)
@@ -66,36 +111,37 @@ impl Dotfiles {
 
         let inner_block = block.clone();
         block.render(area, buffer);
-        let inner = inner_block.inner(area);
+        inner_block.inner(area)
+    }
 
+    fn render_reload_error(&self, area: Rect, buffer: &mut Buffer) -> bool {
         if let Some(message) = self.reload_error.as_ref() {
             Paragraph::new(message.as_str())
                 .style(Style::new().fg(Color::Red))
-                .render(inner, buffer);
-            return;
+                .render(area, buffer);
+            true
+        } else {
+            false
         }
+    }
 
-        let Some(selected_tool) = self
-            .preferences
-            .tools_settings
-            .state
-            .selected()
-            .and_then(|index| self.preferences.tools_settings.tools.get_by_index(index))
-        else {
-            Paragraph::new("Select a tool to view its details.").render(inner, buffer);
-            return;
-        };
+    fn render_tool_selection_prompt(&self, area: Rect, buffer: &mut Buffer) {
+        Paragraph::new("Select a tool to view its details.").render(area, buffer);
+    }
 
-        let tools = &self.preferences.tools_settings.tools;
-        let stage = tools.execution_stage_index(&selected_tool.id);
-        let dependency_map = tools.dependency_map_lines(Some(&selected_tool.id));
-        let script = tools
-            .raw_script(selected_tool)
-            .unwrap_or_else(|| "(Failed to read script)".to_string());
+    fn build_tool_view_data(&self) -> Option<ToolViewData> {
+        let tools_settings = &self.preferences.tools_settings;
+        let tools_state = &tools_settings.state;
+        let tools = &tools_settings.tools;
 
-        let stage_text = stage.map_or("(unknown)".to_string(), |index| {
-            format!("Stage {}", index + 1)
-        });
+        let selected_index = tools_state.selected()?;
+        let selected_tool = tools.get_by_index(selected_index)?;
+
+        let stage_text = tools
+            .execution_stage_index(&selected_tool.id)
+            .map_or("(unknown)".to_string(), |index| {
+                format!("Stage {}", index + 1)
+            });
 
         let info_text = format!(
             "Tool: {}\nID: {}\nPath: {}\nOrder: {}",
@@ -105,52 +151,75 @@ impl Dotfiles {
             stage_text,
         );
 
-        let dependency_map_text = dependency_map.join("\n");
+        let dependency_map_text = tools
+            .dependency_map_lines(Some(&selected_tool.id))
+            .join("\n");
+        
+        let dependency_map_height = (dependency_map_text.lines().count() + 2) as u16;
+
+        let script = tools
+            .raw_script(selected_tool)
+            .unwrap_or_else(|| "(Failed to read script)".to_string());
+
+        Some(ToolViewData {
+            info_text,
+            dependency_map_text,
+            dependency_map_height,
+            script,
+        })
+    }
+
+    fn tool_details_layout(&self, area: Rect, data: &ToolViewData) -> Vec<Rect> {
         let mut constraints = Vec::new();
         if let Some(message) = self.reload_warning.as_ref() {
             let lines = message.lines().count().max(1) as u16 + 1;
             constraints.push(Constraint::Length(lines));
         }
+        const INFO_SECTION_HEIGHT: u16 = 5;
+        const SCRIPT_SECTION_MIN_HEIGHT: u16 = 3;
         constraints.extend([
-            Constraint::Length(7),
-            Constraint::Length((dependency_map_text.lines().count() + 2) as u16),
-            Constraint::Min(3),
+            Constraint::Length(INFO_SECTION_HEIGHT),
+            Constraint::Length(data.dependency_map_height),
+            Constraint::Min(SCRIPT_SECTION_MIN_HEIGHT),
         ]);
 
-        let chunks = Layout::vertical(constraints).split(inner);
+        Layout::vertical(constraints)
+            .split(area)
+            .iter()
+            .copied()
+            .collect()
+    }
 
-        let mut chunk_index = 0;
-        if let Some(message) = self.reload_warning.as_ref() {
-            Paragraph::new(message.as_str())
-                .style(Style::new().fg(Color::Yellow))
-                .render(chunks[chunk_index], buffer);
-            chunk_index += 1;
-        }
+    fn render_info_section(&self, area: Rect, buffer: &mut Buffer, data: &ToolViewData) {
+        Paragraph::new(data.info_text.as_str()).render(area, buffer);
+    }
 
-        Paragraph::new(info_text).render(chunks[chunk_index], buffer);
-        chunk_index += 1;
-
+    fn render_dependency_map_section(&self, area: Rect, buffer: &mut Buffer, data: &ToolViewData) {
         let map_block = Block::new()
             .title(Line::from("Dependency Map (* current tool)"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::White));
-        Paragraph::new(dependency_map_text)
-            .block(map_block)
-            .render(chunks[chunk_index], buffer);
-        chunk_index += 1;
 
+        Paragraph::new(data.dependency_map_text.as_str())
+            .block(map_block)
+            .render(area, buffer);
+    }
+
+    fn render_script_section(&mut self, area: Rect, buffer: &mut Buffer, script: &str) {
         let mut script_block = Block::new()
             .title(Line::from("Script"))
             .borders(Borders::ALL)
             .border_set(symbols::border::PLAIN)
             .border_style(Style::new().fg(Color::White));
+
         if self.view == ViewTab::Script {
             script_block = script_block.border_style(Style::new().fg(Color::Yellow));
         }
-        let script_chunk = chunks[chunk_index];
-        self.view_height = script_block.inner(script_chunk).height as usize;
+
+        self.view_height = script_block.inner(area).height as usize;
         self.script_lines = script.lines().map(|line| format!("  {line}")).collect();
+
         let text = self
             .script_lines
             .iter()
@@ -159,9 +228,10 @@ impl Dotfiles {
             .cloned()
             .collect::<Vec<_>>()
             .join("\n");
+
         Paragraph::new(text)
             .block(script_block)
-            .render(script_chunk, buffer);
+            .render(area, buffer);
     }
 }
 
