@@ -4,7 +4,7 @@
 
 ## Overview
 
-`dotfiles` is a terminal user interface built with [Ratatui](https://ratatui.rs) for browsing and executing the shell scripts that configure your development environment. It reads a declarative YAML configuration, shows the resulting tool graph, and runs the scripts in dependency order.
+`dotfiles` is a terminal user interface built with [Ratatui](https://ratatui.rs) for browsing and executing the shell scripts that configure your development environment. It now also ships a non-TUI CLI for packaging and reinstalling your setup across machines.
 
 ## Features
 
@@ -12,7 +12,8 @@
 - Inspect tool metadata, filesystem paths, and dependency maps
 - Preview the underlying shell script directly in the UI
 - Execute tools in dependency-aware batches with real-time logging
-- Dual-pane layout for dotfile definitions and workflow execution
+- Export your configuration plus scripts into a portable archive
+- Install an exported archive onto a new machine with integrity checks
 
 ## Prerequisites
 
@@ -29,6 +30,8 @@ cargo build --release
 # Optional: install into ~/.cargo/bin
 cargo install --path .
 ```
+
+After compiling you can either launch the TUI directly from the build directory or run `dotfiles` from `~/.cargo/bin` if you installed it.
 
 ## Configuration
 
@@ -54,10 +57,12 @@ Dependencies must reference the `Id` (explicit or generated) of another tool ent
 
 ## Usage
 
-### Running the app
+### Run the TUI
 
 ```sh
 cargo run --release
+# or, if installed:
+dotfiles --tui
 ```
 
 The UI opens with two tabs:
@@ -65,7 +70,40 @@ The UI opens with two tabs:
 - `Dotfiles` shows the configured tools, dependency tree, and script preview.
 - `Workflow` lets you run the scripts in dependency order and tail structured logs.
 
-### Key bindings
+### Export an environment archive
+
+Create a portable archive (default `tar.gz`) containing your `config.yaml`, tool graph metadata, and the associated scripts:
+
+```sh
+# write dotfiles-export-<timestamp>.tar.gz next to the command
+cargo run --release -- export --dest ./backup
+
+# explicit format and path
+dotfiles export --dest ~/Desktop/my-dotfiles --format zip
+```
+
+Each archive contains a manifest with file hashes and permissions so that installs can verify integrity before writing anything to disk.
+
+### Install from an archive
+
+```sh
+# interactively choose the destination root (defaults to value stored in the archive)
+cargo run --release -- install --src ~/Desktop/my-dotfiles.tar.gz
+
+# non-interactive install into a custom path
+dotfiles install --src ./backup.tar.gz --dest ~/.dotfiles --non-interactive
+```
+
+The installer performs the following steps:
+
+- Extracts into a temporary directory and validates every file against the manifest hashes
+- Prompts for (or accepts) the destination root directory
+- Creates a timestamped backup for any file that would be overwritten
+- Restores permissions after copying scripts and config
+
+Once completed you can launch the TUI on the new machine and run workflows immediately.
+
+### Key bindings (TUI)
 
 - `Tab` — toggle between panes (menu vs. script/log view)
 - Arrow keys — move selection in menus or scroll text areas
@@ -85,7 +123,7 @@ cargo clippy --all-targets --all-features
 cargo test
 ```
 
-Run `cargo run` without `--release` for faster feedback during iterative work.
+Run `cargo run` without `--release` for faster feedback during iterative work. You can also invoke the CLI directly with `cargo run -- export …` or `cargo run -- install …` to test the packaging flows.
 
 ## License
 
