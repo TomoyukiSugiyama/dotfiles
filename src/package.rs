@@ -12,6 +12,7 @@ use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tar::{Archive as TarArchive, Builder as TarBuilder, EntryType, Header as TarHeader};
 use tempfile::TempDir;
+use walkdir::WalkDir;
 use zip::CompressionMethod;
 use zip::ZipWriter;
 use zip::read::ZipArchive;
@@ -83,6 +84,8 @@ pub struct ManifestToolEntry {
     pub file: String,
     pub dependencies: Vec<String>,
     pub artifact: ManifestFile,
+    #[serde(default)]
+    pub related_files: Vec<ManifestFile>,
 }
 
 #[derive(Debug)]
@@ -184,6 +187,7 @@ pub fn export_archive(options: &ExportOptions) -> Result<PathBuf, PackageError> 
                     script_metadata.len()
                 },
             },
+            related_files: collect_related_files(&expanded_root, &relative)?,
         });
     }
 
@@ -228,6 +232,9 @@ pub fn install_archive(options: &InstallOptions) -> Result<InstallReport, Packag
     verify_manifest_entry(temp_dir.path(), &manifest.config)?;
     for entry in &manifest.tools {
         verify_manifest_entry(temp_dir.path(), &entry.artifact)?;
+        for related in &entry.related_files {
+            verify_manifest_entry(temp_dir.path(), related)?;
+        }
     }
 
     let destination_root = resolve_destination_root(&manifest, options)?;
@@ -257,6 +264,12 @@ pub fn install_archive(options: &InstallOptions) -> Result<InstallReport, Packag
             entry.artifact.mode,
             &mut report,
         )?;
+
+        for related in &entry.related_files {
+            let related_source = temp_dir.path().join(&related.path);
+            let related_target = destination_root.join(&related.path);
+            install_file(&related_source, &related_target, related.mode, &mut report)?;
+        }
     }
 
     Ok(report)
@@ -320,6 +333,9 @@ fn create_tar_gz(destination: &Path, manifest: &Manifest, root: &Path) -> Result
     append_file_to_tar(&mut builder, root, &manifest.config)?;
     for entry in &manifest.tools {
         append_file_to_tar(&mut builder, root, &entry.artifact)?;
+        for related in &entry.related_files {
+            append_file_to_tar(&mut builder, root, related)?;
+        }
     }
 
     builder.finish()?;
@@ -342,6 +358,9 @@ fn create_zip(destination: &Path, manifest: &Manifest, root: &Path) -> Result<()
     add_file_to_zip(&mut writer, root, &manifest.config)?;
     for entry in &manifest.tools {
         add_file_to_zip(&mut writer, root, &entry.artifact)?;
+        for related in &entry.related_files {
+            add_file_to_zip(&mut writer, root, related)?;
+        }
     }
 
     writer.finish()?;
@@ -374,7 +393,8 @@ fn append_file_to_tar<W: Write>(
     entry: &ManifestFile,
 ) -> Result<(), PackageError> {
     let full_path = root.join(&entry.path);
-    if full_path.is_dir() {
+
+    if entry.path.ends_with('/') {
         let mut header = TarHeader::new_gnu();
         header.set_size(0);
         header.set_mode(entry.mode);
@@ -387,6 +407,34 @@ fn append_file_to_tar<W: Write>(
         );
         header.set_cksum();
         builder.append_data(&mut header, Path::new(&entry.path), &mut io::empty())?;
+        return Ok(());
+    }
+
+    if full_path.is_dir() {
+        let dir_path = if entry.path.ends_with('/') {
+            entry.path.clone()
+        } else {
+            format!("{}/", entry.path)
+        };
+        let mut header = TarHeader::new_gnu();
+        header.set_size(0);
+        header.set_mode(entry.mode);
+        header.set_entry_type(EntryType::Directory);
+        header.set_mtime(
+            fs::metadata(&full_path)?
+                .modified()
+                .ok()
+                .and_then(|mtime| mtime.duration_since(UNIX_EPOCH).ok())
+                .map(|duration| duration.as_secs())
+                .unwrap_or_else(|| {
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs()
+                }),
+        );
+        header.set_cksum();
+        builder.append_data(&mut header, Path::new(&dir_path), &mut io::empty())?;
         return Ok(());
     }
 
@@ -418,9 +466,11 @@ fn add_file_to_zip(
     root: &Path,
     entry: &ManifestFile,
 ) -> Result<(), PackageError> {
-    let full_path = root.join(&entry.path);
-    if full_path.is_dir() {
-        let dir_path = format!("{}/", path_to_string(Path::new(&entry.path)));
+    let trimmed = entry.path.trim_end_matches('/');
+    let full_path = root.join(trimmed);
+
+    if entry.path.ends_with('/') {
+        let dir_path = format!("{}/", path_to_string(Path::new(trimmed)));
         writer.add_directory(
             dir_path,
             ZipFileOptions::default().unix_permissions(entry.mode),
@@ -430,7 +480,7 @@ fn add_file_to_zip(
 
     let mut file = File::open(&full_path)?;
     writer.start_file(
-        path_to_string(Path::new(&entry.path)),
+        path_to_string(Path::new(trimmed)),
         ZipFileOptions::default()
             .compression_method(CompressionMethod::Deflated)
             .unix_permissions(entry.mode),
@@ -484,6 +534,9 @@ fn validate_manifest_paths(manifest: &Manifest) -> Result<(), PackageError> {
     check_path(&mut seen, &manifest.config.path)?;
     for entry in &manifest.tools {
         check_path(&mut seen, &entry.artifact.path)?;
+        for related in &entry.related_files {
+            check_path(&mut seen, &related.path)?;
+        }
     }
     Ok(())
 }
@@ -552,9 +605,8 @@ fn install_file(
     mode: u32,
     report: &mut InstallReport,
 ) -> Result<(), PackageError> {
-    if source.is_dir() {
+    if source.is_dir() || target.as_os_str().to_string_lossy().ends_with('/') {
         fs::create_dir_all(target)?;
-        report.installed_files.push(target.to_path_buf());
         return Ok(());
     }
 
@@ -671,4 +723,55 @@ fn file_mode(metadata: &fs::Metadata) -> u32 {
     {
         0o644
     }
+}
+
+fn collect_related_files(
+    root: &Path,
+    script_relative: &Path,
+) -> Result<Vec<ManifestFile>, PackageError> {
+    let script_dir = script_relative.parent().map(Path::to_path_buf);
+    let mut files = Vec::new();
+    let mut seen = HashSet::new();
+
+    if let Some(dir) = script_dir {
+        let absolute_dir = root.join(&dir);
+        if absolute_dir.is_dir() {
+            for entry in WalkDir::new(&absolute_dir)
+                .into_iter()
+                .filter_map(Result::ok)
+            {
+                let path = entry.path();
+                if path == root.join(script_relative) {
+                    continue;
+                }
+
+                let relative = relative_path(path, root)?;
+                let relative_string = path_to_string(&relative);
+                if !seen.insert(relative_string.clone()) {
+                    continue;
+                }
+
+                let metadata = fs::metadata(path)?;
+
+                if path.is_dir() {
+                    files.push(ManifestFile {
+                        path: format!("{relative_string}/"),
+                        sha256: String::new(),
+                        mode: file_mode(&metadata),
+                        size: 0,
+                    });
+                } else if path.is_file() {
+                    files.push(ManifestFile {
+                        path: relative_string,
+                        sha256: compute_sha256_path(path)?,
+                        mode: file_mode(&metadata),
+                        size: metadata.len(),
+                    });
+                }
+            }
+        }
+    }
+
+    files.sort_by(|a, b| a.path.cmp(&b.path));
+    Ok(files)
 }
