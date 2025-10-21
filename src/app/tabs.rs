@@ -2,9 +2,9 @@ use strum::{Display, EnumIter};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Display, EnumIter)]
 pub(crate) enum SelectedTab {
-    #[default]
     #[strum(to_string = "Dotfiles")]
     Dotfiles,
+    #[default]
     #[strum(to_string = "Workflow")]
     Workflow,
 }
