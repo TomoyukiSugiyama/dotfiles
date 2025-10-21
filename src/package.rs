@@ -4,10 +4,13 @@ use flate2::Compression;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use serde::{Deserialize, Serialize};
+use serde_yaml::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::fs::{self, File};
 use std::io::{self, Cursor, Read, Write};
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
 use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tar::{Archive as TarArchive, Builder as TarBuilder, EntryType, Header as TarHeader};
@@ -37,6 +40,8 @@ pub enum PackageError {
     Io(#[from] io::Error),
     #[error("Serialization error: {0}")]
     SerdeJson(#[from] serde_json::Error),
+    #[error("YAML error: {0}")]
+    SerdeYaml(#[from] serde_yaml::Error),
     #[error("Archive error: {0}")]
     Zip(#[from] zip::result::ZipError),
     #[error("Unsupported archive format")]
@@ -255,6 +260,8 @@ pub fn install_archive(options: &InstallOptions) -> Result<InstallReport, Packag
         &mut report,
     )?;
 
+    rewrite_config_root(&config_target, &destination_root)?;
+
     for entry in &manifest.tools {
         let script_source = temp_dir.path().join(&entry.artifact.path);
         let script_target = destination_root.join(&entry.artifact.path);
@@ -271,6 +278,8 @@ pub fn install_archive(options: &InstallOptions) -> Result<InstallReport, Packag
             install_file(&related_source, &related_target, related.mode, &mut report)?;
         }
     }
+
+    create_root_symlink(&manifest.original_root, &destination_root)?;
 
     Ok(report)
 }
@@ -774,4 +783,70 @@ fn collect_related_files(
 
     files.sort_by(|a, b| a.path.cmp(&b.path));
     Ok(files)
+}
+
+fn rewrite_config_root(config_path: &Path, new_root: &Path) -> Result<(), PackageError> {
+    let contents = fs::read_to_string(config_path)?;
+    let mut docs: Value = serde_yaml::from_str(&contents)?;
+
+    if let Value::Mapping(root_map) = &mut docs {
+        root_map.insert(
+            Value::String("SystemPreferences".into()),
+            Value::Mapping(
+                vec![(
+                    Value::String("Root".into()),
+                    Value::String(new_root.to_string_lossy().into_owned()),
+                )]
+                .into_iter()
+                .collect(),
+            ),
+        );
+    }
+
+    let serialized = serde_yaml::to_string(&docs)?;
+    fs::write(config_path, serialized)?;
+    Ok(())
+}
+
+fn create_root_symlink(original_root: &str, destination_root: &Path) -> Result<(), PackageError> {
+    #[cfg(unix)]
+    {
+        let original_path = config::expand_home_path(original_root);
+
+        if original_path == destination_root {
+            return Ok(());
+        }
+
+        if let Some(parent) = original_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        if let Ok(metadata) = fs::symlink_metadata(&original_path) {
+            if metadata.file_type().is_symlink() {
+                if let Ok(existing_target) = fs::read_link(&original_path) {
+                    if existing_target == destination_root {
+                        return Ok(());
+                    }
+                }
+                fs::remove_file(&original_path)?;
+            } else {
+                let timestamp = Utc::now().format("%Y%m%d%H%M%S");
+                let file_name = original_path
+                    .file_name()
+                    .and_then(|name| name.to_str())
+                    .map(|name| name.to_string())
+                    .unwrap_or_else(|| "dotfiles".to_string());
+                let backup_name = format!("{file_name}.backup-{timestamp}");
+                let backup_path = original_path
+                    .parent()
+                    .unwrap_or_else(|| Path::new(""))
+                    .join(backup_name);
+                fs::rename(&original_path, backup_path)?;
+            }
+        }
+
+        symlink(destination_root, &original_path)?;
+    }
+
+    Ok(())
 }
