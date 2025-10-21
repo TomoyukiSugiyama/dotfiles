@@ -4,7 +4,6 @@ use flate2::Compression;
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use serde::{Deserialize, Serialize};
-use serde_yaml::Value;
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 use std::fs::{self, File};
@@ -786,25 +785,46 @@ fn collect_related_files(
 }
 
 fn rewrite_config_root(config_path: &Path, new_root: &Path) -> Result<(), PackageError> {
-    let contents = fs::read_to_string(config_path)?;
-    let mut docs: Value = serde_yaml::from_str(&contents)?;
+    use std::fmt::Write as FmtWrite;
 
-    if let Value::Mapping(root_map) = &mut docs {
-        root_map.insert(
-            Value::String("SystemPreferences".into()),
-            Value::Mapping(
-                vec![(
-                    Value::String("Root".into()),
-                    Value::String(new_root.to_string_lossy().into_owned()),
-                )]
-                .into_iter()
-                .collect(),
-            ),
-        );
+    let contents = fs::read_to_string(config_path)?;
+    let mut output = String::with_capacity(contents.len() + 64);
+    let mut in_system_preferences = false;
+    let new_root_str = new_root.to_string_lossy();
+
+    for line in contents.lines() {
+        let trimmed = line.trim_start();
+
+        if trimmed.starts_with("SystemPreferences:") {
+            in_system_preferences = true;
+            writeln!(&mut output, "{}", line).unwrap();
+            continue;
+        }
+
+        if in_system_preferences {
+            if trimmed.starts_with("Root:") {
+                let indentation = &line[..line.len() - trimmed.len()];
+                writeln!(&mut output, "{indentation}Root: {new_root_str}").unwrap();
+                in_system_preferences = false;
+                continue;
+            }
+
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                writeln!(&mut output, "{}", line).unwrap();
+                continue;
+            }
+
+            in_system_preferences = false;
+        }
+
+        writeln!(&mut output, "{}", line).unwrap();
     }
 
-    let serialized = serde_yaml::to_string(&docs)?;
-    fs::write(config_path, serialized)?;
+    if !contents.ends_with('\n') {
+        output.push('\n');
+    }
+
+    fs::write(config_path, output)?;
     Ok(())
 }
 
