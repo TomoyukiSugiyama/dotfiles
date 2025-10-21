@@ -693,7 +693,7 @@ fn validate_relative_path(path: &str) -> Result<(), PackageError> {
 
     if candidate
         .components()
-        .any(|component| matches!(component, Component::ParentDir))
+        .any(|component| matches!(component, Component::ParentDir | Component::RootDir))
     {
         return Err(PackageError::PathOutsideRoot {
             path: path.to_string(),
