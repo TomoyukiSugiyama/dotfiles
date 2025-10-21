@@ -284,10 +284,10 @@ pub fn install_archive(options: &InstallOptions) -> Result<InstallReport, Packag
 }
 
 fn ensure_destination_parent(path: &Path) -> Result<(), PackageError> {
-    if let Some(parent) = path.parent() {
-        if !parent.as_os_str().is_empty() {
-            fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
     }
     Ok(())
 }
@@ -498,10 +498,10 @@ fn add_file_to_zip(
 }
 
 fn detect_archive_format(path: &Path) -> Result<ArchiveFormat, PackageError> {
-    if let Some(name) = path.file_name().and_then(|name| name.to_str()) {
-        if name.ends_with(".tar.gz") || name.ends_with(".tgz") {
-            return Ok(ArchiveFormat::TarGz);
-        }
+    if let Some(name) = path.file_name().and_then(|name| name.to_str())
+        && (name.ends_with(".tar.gz") || name.ends_with(".tgz"))
+    {
+        return Ok(ArchiveFormat::TarGz);
     }
 
     let lowercase = path
@@ -843,10 +843,10 @@ fn create_root_symlink(original_root: &str, destination_root: &Path) -> Result<(
 
         if let Ok(metadata) = fs::symlink_metadata(&original_path) {
             if metadata.file_type().is_symlink() {
-                if let Ok(existing_target) = fs::read_link(&original_path) {
-                    if existing_target == destination_root {
-                        return Ok(());
-                    }
+                if let Ok(existing_target) = fs::read_link(&original_path)
+                    && existing_target == destination_root
+                {
+                    return Ok(());
                 }
                 fs::remove_file(&original_path)?;
             } else {

@@ -104,13 +104,7 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        None => {
-            if cli.tui {
-                run_tui()
-            } else {
-                run_tui()
-            }
-        }
+        None => run_tui(),
     }
 }
 
