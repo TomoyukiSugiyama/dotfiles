@@ -9,22 +9,14 @@ impl Dotfiles {
             (_, KeyCode::Tab) => self.view = self.view.next(),
             (_, KeyCode::Up) => {
                 if self.view == ViewTab::Menu {
-                    let previous = self.preferences.tools_settings.state.selected();
-                    self.preferences.tools_settings.state.select_previous();
-                    if self.preferences.tools_settings.state.selected() != previous {
-                        self.reset_script_view();
-                    }
+                    self.select_previous_tool();
                 } else {
                     self.scroll_script(-1)
                 }
             }
             (_, KeyCode::Down) => {
                 if self.view == ViewTab::Menu {
-                    let previous = self.preferences.tools_settings.state.selected();
-                    self.preferences.tools_settings.state.select_next();
-                    if self.preferences.tools_settings.state.selected() != previous {
-                        self.reset_script_view();
-                    }
+                    self.select_next_tool();
                 } else {
                     self.scroll_script(1)
                 }

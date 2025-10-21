@@ -3,6 +3,22 @@ use crate::tools::Tools;
 use ratatui::widgets::ListState;
 
 impl Dotfiles {
+
+    pub(crate) fn select_next_tool(&mut self) {
+        let previous = self.preferences.tools_settings.state.selected();
+        self.preferences.tools_settings.state.select_next();
+        if self.preferences.tools_settings.state.selected() != previous {
+            self.reset_script_view();
+        }
+    }
+
+    pub(crate) fn select_previous_tool(&mut self) {
+        let previous = self.preferences.tools_settings.state.selected();
+        self.preferences.tools_settings.state.select_previous();
+        if self.preferences.tools_settings.state.selected() != previous {
+            self.reset_script_view();
+        }
+    }
     pub(crate) fn scroll_script(&mut self, amount: i16) {
         if self.script_lines.is_empty() {
             return;
