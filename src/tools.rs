@@ -49,58 +49,10 @@ impl Tools {
     }
 
     fn load(strict: bool) -> Result<(Self, Vec<String>), ToolError> {
-        let config = Config::new().map_err(|error| ToolError::ConfigLoad(error.to_string()))?;
+        let config = Self::load_config()?;
         let root = config.root().to_string();
-        let mut items = HashMap::new();
-        let mut dependency_map: HashMap<String, Vec<String>> = HashMap::new();
-        let mut name_counts: HashMap<String, usize> = HashMap::new();
-
-        for tool in config.tools() {
-            let dependencies = tool.dependencies();
-            let id = generate_tool_id(&mut name_counts, &items, tool);
-
-            if dependencies.iter().any(|dependency| dependency == &id) {
-                return Err(ToolError::SelfDependency(id));
-            }
-            if items.contains_key(&id) {
-                return Err(ToolError::DuplicateId(id));
-            }
-            dependency_map.insert(id.clone(), dependencies.clone());
-            items.insert(
-                id.clone(),
-                ToolItem {
-                    id,
-                    name: tool.name(),
-                    root: tool.root_name(),
-                    file: tool.file_name(),
-                    dependencies,
-                },
-            );
-        }
-
-        let mut warnings = Vec::new();
-        if !strict {
-            let valid_ids: HashSet<_> = items.keys().cloned().collect();
-            for (tool_id, item) in items.iter_mut() {
-                let mut retained = Vec::with_capacity(item.dependencies.len());
-                for dependency in std::mem::take(&mut item.dependencies) {
-                    if valid_ids.contains(&dependency) {
-                        retained.push(dependency);
-                    } else {
-                        warnings.push(format!(
-                            "Tool '{}' references missing dependency '{}'",
-                            tool_id, dependency
-                        ));
-                    }
-                }
-                item.dependencies = retained;
-            }
-
-            dependency_map = items
-                .iter()
-                .map(|(id, item)| (id.clone(), item.dependencies.clone()))
-                .collect();
-        }
+        let mut items = Self::build_tool_items(&config)?;
+        let (dependency_map, warnings) = Self::sanitize_dependencies(&mut items, strict);
 
         Self::validate_dependencies(&items, &dependency_map)?;
 
@@ -113,6 +65,80 @@ impl Tools {
             },
             warnings,
         ))
+    }
+
+    fn load_config() -> Result<Config, ToolError> {
+        Config::new().map_err(|error| ToolError::ConfigLoad(error.to_string()))
+    }
+
+    fn build_tool_items(config: &Config) -> Result<HashMap<String, ToolItem>, ToolError> {
+        let mut items = HashMap::new();
+        let mut name_counts: HashMap<String, usize> = HashMap::new();
+
+        for tool in config.tools() {
+            let dependencies = tool.dependencies();
+            let id = generate_tool_id(&mut name_counts, &items, tool);
+
+            if dependencies.iter().any(|dependency| dependency == &id) {
+                return Err(ToolError::SelfDependency(id));
+            }
+            if items.contains_key(&id) {
+                return Err(ToolError::DuplicateId(id));
+            }
+
+            items.insert(
+                id.clone(),
+                ToolItem {
+                    id,
+                    name: tool.name(),
+                    root: tool.root_name(),
+                    file: tool.file_name(),
+                    dependencies,
+                },
+            );
+        }
+
+        Ok(items)
+    }
+
+    fn sanitize_dependencies(
+        items: &mut HashMap<String, ToolItem>,
+        strict: bool,
+    ) -> (HashMap<String, Vec<String>>, Vec<String>) {
+        if strict {
+            let dependency_map = Self::dependency_map_from_items(items);
+            return (dependency_map, Vec::new());
+        }
+
+        let valid_ids: HashSet<String> = items.keys().cloned().collect();
+        let mut warnings = Vec::new();
+
+        for (tool_id, item) in items.iter_mut() {
+            let mut retained = Vec::with_capacity(item.dependencies.len());
+            for dependency in std::mem::take(&mut item.dependencies) {
+                if valid_ids.contains(&dependency) {
+                    retained.push(dependency);
+                } else {
+                    warnings.push(format!(
+                        "Tool '{}' references missing dependency '{}'",
+                        tool_id, dependency
+                    ));
+                }
+            }
+            item.dependencies = retained;
+        }
+
+        let dependency_map = Self::dependency_map_from_items(items);
+        (dependency_map, warnings)
+    }
+
+    fn dependency_map_from_items(
+        items: &HashMap<String, ToolItem>,
+    ) -> HashMap<String, Vec<String>> {
+        items
+            .iter()
+            .map(|(id, item)| (id.clone(), item.dependencies.clone()))
+            .collect()
     }
 
     pub(crate) fn iter(&self) -> impl Iterator<Item = &ToolItem> {
@@ -194,16 +220,11 @@ impl Tools {
                 continue;
             }
 
-            let marker = if Some(root.id.as_str()) == highlight_id {
-                "*"
-            } else {
-                "-"
-            };
-            lines.push(format!("{marker} {}", root.display_name()));
+            lines.push(self.format_marked_tool(root, highlight_id));
             self.append_dependents_tree(root, "", highlight_id, &mut lines, &mut visited);
 
-            if index + 1 != roots.len() && lines.last().is_some_and(|line| !line.is_empty()) {
-                lines.push(String::new());
+            if index + 1 != roots.len() {
+                Self::push_blank_line(&mut lines);
             }
         }
 
@@ -212,16 +233,8 @@ impl Tools {
                 continue;
             }
 
-            if lines.last().is_some_and(|line| !line.is_empty()) {
-                lines.push(String::new());
-            }
-
-            let marker = if Some(tool.id.as_str()) == highlight_id {
-                "*"
-            } else {
-                "-"
-            };
-            lines.push(format!("{marker} {}", tool.display_name()));
+            Self::push_blank_line(&mut lines);
+            lines.push(self.format_marked_tool(tool, highlight_id));
             visited.insert(tool.id.clone());
             self.append_dependents_tree(tool, "", highlight_id, &mut lines, &mut visited);
         }
@@ -337,6 +350,31 @@ impl Tools {
         }
     }
 
+    fn format_marked_tool(&self, tool: &ToolItem, highlight_id: Option<&str>) -> String {
+        format!(
+            "{} {}",
+            Self::marker_for(highlight_id, &tool.id),
+            tool.display_name()
+        )
+    }
+
+    fn marker_for(highlight_id: Option<&str>, tool_id: &str) -> &'static str {
+        if Some(tool_id) == highlight_id {
+            "*"
+        } else {
+            "-"
+        }
+    }
+
+    fn push_blank_line(lines: &mut Vec<String>) {
+        if lines
+            .last()
+            .is_some_and(|line| !line.is_empty())
+        {
+            lines.push(String::new());
+        }
+    }
+
     fn append_dependents_tree(
         &self,
         tool: &ToolItem,
@@ -355,13 +393,12 @@ impl Tools {
         let last_index = dependents.len().saturating_sub(1);
         for (index, dependent) in dependents.into_iter().enumerate() {
             let connector = if index == last_index { "`--" } else { "|--" };
-            let marker = if Some(dependent.id.as_str()) == highlight_id {
-                "*"
-            } else {
-                "-"
-            };
             let newly_visited = visited.insert(dependent.id.clone());
-            let mut line = format!("{prefix}{connector} {marker} {}", dependent.display_name());
+            let mut line = format!(
+                "{prefix}{connector} {} {}",
+                Self::marker_for(highlight_id, &dependent.id),
+                dependent.display_name()
+            );
             if !newly_visited {
                 line.push_str(" (repeat)");
                 lines.push(line);
