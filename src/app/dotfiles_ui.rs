@@ -154,7 +154,7 @@ impl Dotfiles {
         let dependency_map_text = tools
             .dependency_map_lines(Some(&selected_tool.id))
             .join("\n");
-        
+
         let dependency_map_height = (dependency_map_text.lines().count() + 2) as u16;
 
         let script = tools
