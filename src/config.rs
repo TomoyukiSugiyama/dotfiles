@@ -41,6 +41,8 @@ pub(crate) struct Tool {
     pub dependencies: Vec<String>,
 }
 
+pub(crate) const DEFAULT_CONFIG_PATH: &str = "~/.dotfiles/config.yaml";
+
 impl Config {
     pub(crate) fn new() -> Result<Self> {
         Self::create_config_dir()?;
@@ -50,7 +52,7 @@ impl Config {
     }
 
     pub(crate) fn load() -> Result<Self> {
-        Self::load_from_file("~/.dotfiles/config.yaml")
+        Self::load_from_file(DEFAULT_CONFIG_PATH)
     }
 
     pub(crate) fn load_from_file(path: &str) -> Result<Self> {
@@ -169,7 +171,7 @@ impl Tool {
             .collect()
     }
 }
-fn expand_home_path(path: &str) -> PathBuf {
+pub(crate) fn expand_home_path(path: &str) -> PathBuf {
     if let Some(stripped) = path.strip_prefix("~/")
         && let Ok(home) = env::var("HOME")
     {

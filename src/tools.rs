@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{self, Config};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt;
 use std::fs;
@@ -333,21 +333,15 @@ impl Tools {
         stage_map.get(tool_id).copied()
     }
 
-    fn tool_path(&self, tool: &ToolItem) -> PathBuf {
-        let mut root = self.expand_home_path(&self.root);
+    pub(crate) fn tool_path(&self, tool: &ToolItem) -> PathBuf {
+        let mut root = config::expand_home_path(&self.root);
         root.push(&tool.root);
         root.push(&tool.file);
         root
     }
 
-    fn expand_home_path(&self, path: &str) -> PathBuf {
-        if let Some(stripped) = path.strip_prefix("~/")
-            && let Ok(home) = std::env::var("HOME")
-        {
-            PathBuf::from(home).join(stripped)
-        } else {
-            PathBuf::from(path)
-        }
+    pub(crate) fn root(&self) -> &str {
+        &self.root
     }
 
     fn format_marked_tool(&self, tool: &ToolItem, highlight_id: Option<&str>) -> String {
