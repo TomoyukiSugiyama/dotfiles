@@ -27,7 +27,7 @@ enum Commands {
         dest: PathBuf,
 
         /// Archive format (tar.gz or zip)
-        #[arg(long, default_value = "tar.gz")]
+        #[arg(long, value_enum, default_value_t = ExportFormat::TarGz)]
         format: ExportFormat,
     },
     /// Install configuration and tools from an archive
@@ -48,9 +48,9 @@ enum Commands {
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum ExportFormat {
-    #[value(alias("tgz"), alias("tar"))]
+    #[value(alias = "tgz", alias = "tar", alias = "tar.gz")]
     TarGz,
-    #[value(alias("zip"))]
+    #[value(alias = "zip")]
     Zip,
 }
 
@@ -119,16 +119,4 @@ fn run_tui() -> Result<()> {
     let result = app::App::new().run(terminal);
     ratatui::restore();
     result
-}
-
-impl std::str::FromStr for ExportFormat {
-    type Err = String;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        match s.to_ascii_lowercase().as_str() {
-            "tar.gz" | "tgz" | "tar" => Ok(ExportFormat::TarGz),
-            "zip" => Ok(ExportFormat::Zip),
-            other => Err(format!("Unsupported format: {other}")),
-        }
-    }
 }

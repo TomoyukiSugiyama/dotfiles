@@ -272,21 +272,30 @@ fn ensure_destination_parent(path: &Path) -> Result<(), PackageError> {
 }
 
 fn finalize_destination(candidate: &Path, format: ArchiveFormat) -> PathBuf {
-    if let Some(ext) = candidate.extension().and_then(|ext| ext.to_str()) {
-        if ext.eq_ignore_ascii_case(format.extension()) {
-            return candidate.to_path_buf();
-        }
+    if candidate.as_os_str().is_empty() {
+        return default_archive_name(format.extension());
     }
 
     let mut final_path = candidate.to_path_buf();
-    if final_path.as_os_str().is_empty() {
-        final_path = default_archive_name(format.extension());
-    } else {
-        let mut os_string = final_path.into_os_string();
-        os_string.push(format!(".{ext}", ext = format.extension()));
-        final_path = PathBuf::from(os_string);
+
+    if final_path.is_dir() {
+        let file_name = default_archive_name(format.extension());
+        final_path.push(file_name.file_name().unwrap());
+        return final_path;
     }
-    final_path
+
+    match final_path.extension().and_then(|ext| ext.to_str()) {
+        Some(ext) if ext.eq_ignore_ascii_case(format.extension()) => final_path,
+        Some(_) => {
+            final_path.set_extension(format.extension());
+            final_path
+        }
+        None => {
+            let mut os_string = final_path.into_os_string();
+            os_string.push(format!(".{ext}", ext = format.extension()));
+            PathBuf::from(os_string)
+        }
+    }
 }
 
 fn default_archive_name(extension: &str) -> PathBuf {
