@@ -141,6 +141,73 @@ impl Tools {
             .collect()
     }
 
+    fn validate_dependencies(
+        items: &HashMap<String, ToolItem>,
+        dependency_map: &HashMap<String, Vec<String>>,
+    ) -> Result<(), ToolError> {
+        for (tool_id, dependencies) in dependency_map {
+            for dependency in dependencies {
+                if !items.contains_key(dependency) {
+                    return Err(ToolError::MissingDependency {
+                        tool_id: tool_id.clone(),
+                        dependency_id: dependency.clone(),
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn topological_order(items: &HashMap<String, ToolItem>) -> Result<Vec<String>, ToolError> {
+        let mut in_degree: HashMap<&str, usize> = HashMap::new();
+        let mut graph: HashMap<&str, Vec<&str>> = HashMap::new();
+
+        for (id, item) in items.iter() {
+            let id_str = id.as_str();
+            in_degree.entry(id_str).or_insert(0);
+            for dependency in &item.dependencies {
+                let dependency_item =
+                    items
+                        .get(dependency)
+                        .ok_or_else(|| ToolError::MissingDependency {
+                            tool_id: id.clone(),
+                            dependency_id: dependency.clone(),
+                        })?;
+                graph
+                    .entry(dependency_item.id.as_str())
+                    .or_default()
+                    .push(id_str);
+                *in_degree.entry(id_str).or_insert(0) += 1;
+            }
+        }
+
+        let mut queue: VecDeque<&str> = in_degree
+            .iter()
+            .filter_map(|(id, &degree)| if degree == 0 { Some(*id) } else { None })
+            .collect();
+
+        let mut order = Vec::with_capacity(items.len());
+        while let Some(id) = queue.pop_front() {
+            order.push(id.to_string());
+            if let Some(neighbors) = graph.get(id) {
+                for &neighbor in neighbors {
+                    if let Some(degree) = in_degree.get_mut(neighbor) {
+                        *degree -= 1;
+                        if *degree == 0 {
+                            queue.push_back(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+
+        if order.len() == items.len() {
+            Ok(order)
+        } else {
+            Err(ToolError::CycleDetected)
+        }
+    }
+
     pub(crate) fn iter(&self) -> impl Iterator<Item = &ToolItem> {
         self.ordered_ids.iter().filter_map(|id| self.items.get(id))
     }
@@ -266,23 +333,6 @@ impl Tools {
         stage_map.get(tool_id).copied()
     }
 
-    fn validate_dependencies(
-        items: &HashMap<String, ToolItem>,
-        dependency_map: &HashMap<String, Vec<String>>,
-    ) -> Result<(), ToolError> {
-        for (tool_id, dependencies) in dependency_map {
-            for dependency in dependencies {
-                if !items.contains_key(dependency) {
-                    return Err(ToolError::MissingDependency {
-                        tool_id: tool_id.clone(),
-                        dependency_id: dependency.clone(),
-                    });
-                }
-            }
-        }
-        Ok(())
-    }
-
     fn tool_path(&self, tool: &ToolItem) -> PathBuf {
         let mut root = self.expand_home_path(&self.root);
         root.push(&tool.root);
@@ -297,56 +347,6 @@ impl Tools {
             PathBuf::from(home).join(stripped)
         } else {
             PathBuf::from(path)
-        }
-    }
-
-    fn topological_order(items: &HashMap<String, ToolItem>) -> Result<Vec<String>, ToolError> {
-        let mut in_degree: HashMap<&str, usize> = HashMap::new();
-        let mut graph: HashMap<&str, Vec<&str>> = HashMap::new();
-
-        for (id, item) in items.iter() {
-            let id_str = id.as_str();
-            in_degree.entry(id_str).or_insert(0);
-            for dependency in &item.dependencies {
-                let dependency_item =
-                    items
-                        .get(dependency)
-                        .ok_or_else(|| ToolError::MissingDependency {
-                            tool_id: id.clone(),
-                            dependency_id: dependency.clone(),
-                        })?;
-                graph
-                    .entry(dependency_item.id.as_str())
-                    .or_default()
-                    .push(id_str);
-                *in_degree.entry(id_str).or_insert(0) += 1;
-            }
-        }
-
-        let mut queue: VecDeque<&str> = in_degree
-            .iter()
-            .filter_map(|(id, &degree)| if degree == 0 { Some(*id) } else { None })
-            .collect();
-
-        let mut order = Vec::with_capacity(items.len());
-        while let Some(id) = queue.pop_front() {
-            order.push(id.to_string());
-            if let Some(neighbors) = graph.get(id) {
-                for &neighbor in neighbors {
-                    if let Some(degree) = in_degree.get_mut(neighbor) {
-                        *degree -= 1;
-                        if *degree == 0 {
-                            queue.push_back(neighbor);
-                        }
-                    }
-                }
-            }
-        }
-
-        if order.len() == items.len() {
-            Ok(order)
-        } else {
-            Err(ToolError::CycleDetected)
         }
     }
 
@@ -367,10 +367,7 @@ impl Tools {
     }
 
     fn push_blank_line(lines: &mut Vec<String>) {
-        if lines
-            .last()
-            .is_some_and(|line| !line.is_empty())
-        {
+        if lines.last().is_some_and(|line| !line.is_empty()) {
             lines.push(String::new());
         }
     }
