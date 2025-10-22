@@ -139,7 +139,7 @@ jobs:
         with:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           commit-message: "chore: bump ${PROJECT_NAME} to ${{ steps.version.outputs.version }}"
-          branch: release/${PROJECT_NAME}-${{ steps.version.outputs.version }}
+          branch: release/${{ env.PROJECT_NAME }}-${{ steps.version.outputs.version }}
           title: "chore: update ${PROJECT_NAME} to v${{ steps.version.outputs.version }}"
           body: |
             Automated update for `${PROJECT_NAME}` Homebrew formula.
