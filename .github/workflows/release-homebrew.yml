@@ -113,10 +113,28 @@ jobs:
           VERSION_LINE="  version \"${{ steps.version.outputs.version }}\""
           URL_LINE="  url \"${DOWNLOAD_URL}\""
           SHA_LINE="  sha256 \"${{ steps.checksum.outputs.sha256 }}\""
+          HOMEPAGE="https://github.com/${{ github.repository }}"
 
           if [ ! -f "$FORMULA_FILE" ]; then
-            echo "Formula file $FORMULA_FILE does not exist" >&2
-            exit 1
+            mkdir -p "$(dirname "$FORMULA_FILE")"
+            cat > "$FORMULA_FILE" <<EOF
+class Dotfiles < Formula
+  desc "Terminal UI and CLI for dotfiles management"
+  homepage "$HOMEPAGE"
+  version "0.0.0"
+  url "https://example.invalid/dotfiles-0.0.0.tar.gz"
+  sha256 "000"
+  license "MIT"
+
+  def install
+    bin.install "$PROJECT_NAME"
+  end
+
+  test do
+    system "#{bin}/$PROJECT_NAME", "--help"
+  end
+end
+EOF
           fi
 
           perl -0pi -e 's/^\s*version\s+"[^"]+"$/${ENV{VERSION_LINE}}/m' "$FORMULA_FILE"
