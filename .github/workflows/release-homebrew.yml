@@ -1,0 +1,150 @@
+name: Release Homebrew Tap
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "SemVer version to release (e.g. 0.2.0)"
+        required: true
+      release_notes:
+        description: "Release notes or changelog snippet"
+        required: false
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+  PROJECT_NAME: dotfiles
+  HOMEBREW_TAP_REPOSITORY: TomoyukiSugiyama/homebrew-tap
+  HOMEBREW_TAP_FORMULA_PATH: Formula/dotfiles.rb
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Apple targets
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Restore cargo cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build release binaries
+        run: |
+          set -euo pipefail
+          cargo build --release --target aarch64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+          mkdir -p target/universal-apple-darwin
+          lipo \
+            target/aarch64-apple-darwin/release/${PROJECT_NAME} \
+            target/x86_64-apple-darwin/release/${PROJECT_NAME} \
+            -create \
+            -output target/universal-apple-darwin/${PROJECT_NAME}
+
+      - name: Determine release version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.release_version }}" ]; then
+            VERSION="${{ github.event.inputs.release_version }}"
+          else
+            VERSION="${GITHUB_REF##*/}"
+            VERSION="${VERSION#v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Package binary
+        run: |
+          set -euo pipefail
+          ARCHIVE_NAME="${PROJECT_NAME}-${{ steps.version.outputs.version }}-universal-apple-darwin.tar.gz"
+          ARCHIVE_PATH="target/universal-apple-darwin/${ARCHIVE_NAME}"
+          tar -C target/universal-apple-darwin -czf "$ARCHIVE_PATH" "${PROJECT_NAME}"
+          {
+            echo "archive-name=$ARCHIVE_NAME"
+            echo "archive-path=$ARCHIVE_PATH"
+          } >> "$GITHUB_OUTPUT"
+        id: package
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }}
+          body: ${{ github.event.inputs.release_notes }}
+          generate_release_notes: ${{ github.event.inputs.release_notes == '' }}
+          files: ${{ steps.package.outputs.archive-path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calculate SHA256
+        id: checksum
+        run: |
+          FILE="${{ steps.package.outputs.archive-path }}"
+          SHASUM=$(shasum -a 256 "$FILE" | awk '{print $1}')
+          echo "sha256=$SHASUM" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.HOMEBREW_TAP_REPOSITORY }}
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap-repo
+
+      - name: Prepare formula update
+        id: formula
+        run: |
+          set -euo pipefail
+          FORMULA_FILE="tap-repo/${HOMEBREW_TAP_FORMULA_PATH}"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/${{ steps.package.outputs.archive-name }}"
+          VERSION_LINE="  version \"${{ steps.version.outputs.version }}\""
+          URL_LINE="  url \"${DOWNLOAD_URL}\""
+          SHA_LINE="  sha256 \"${{ steps.checksum.outputs.sha256 }}\""
+
+          if [ ! -f "$FORMULA_FILE" ]; then
+            echo "Formula file $FORMULA_FILE does not exist" >&2
+            exit 1
+          fi
+
+          perl -0pi -e 's/^\s*version\s+"[^"]+"$/${ENV{VERSION_LINE}}/m' "$FORMULA_FILE"
+          perl -0pi -e 's/^\s*url\s+"[^"]+"$/${ENV{URL_LINE}}/m' "$FORMULA_FILE"
+          perl -0pi -e 's/^\s*sha256\s+"[^"]+"$/${ENV{SHA_LINE}}/m' "$FORMULA_FILE"
+
+          git -C tap-repo status --short
+        env:
+          VERSION_LINE: ${{ format('  version "{0}"', steps.version.outputs.version) }}
+          URL_LINE: ${{ format('  url "https://github.com/{0}/releases/download/v{1}/{2}"', github.repository, steps.version.outputs.version, steps.package.outputs["archive-name"]) }}
+          SHA_LINE: ${{ format('  sha256 "{0}"', steps.checksum.outputs.sha256) }}
+
+      - name: Update Homebrew tap
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          commit-message: "chore: bump ${PROJECT_NAME} to ${{ steps.version.outputs.version }}"
+          branch: release/${PROJECT_NAME}-${{ steps.version.outputs.version }}
+          title: "chore: update ${PROJECT_NAME} to v${{ steps.version.outputs.version }}"
+          body: |
+            Automated update for `${PROJECT_NAME}` Homebrew formula.
+
+            - Version: `${{ steps.version.outputs.version }}`
+            - SHA256: `${{ steps.checksum.outputs.sha256 }}`
+            - Source: `${{ github.repository }}`
+          committer: GitHub <noreply@github.com>
+          author: GitHub <noreply@github.com>
+          repository: ${{ env.HOMEBREW_TAP_REPOSITORY }}
+          base: main
+          path: tap-repo
+
