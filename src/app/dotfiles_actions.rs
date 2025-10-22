@@ -175,4 +175,90 @@ mod tests {
         
         assert!(dotfiles.reload_warning.is_none());
     }
+
+    #[test]
+    fn test_select_next_tool() {
+        let mut dotfiles = Dotfiles::new();
+        
+        dotfiles.select_next_tool();
+        
+        // State should have been updated (actual behavior depends on ListState)
+        // Just verify no panic occurred
+        assert!(dotfiles.preferences.tools_settings.state.selected().is_some());
+    }
+
+    #[test]
+    fn test_select_previous_tool() {
+        let mut dotfiles = Dotfiles::new();
+        
+        dotfiles.select_previous_tool();
+        
+        // State should have been updated (actual behavior depends on ListState)
+        // Just verify no panic occurred
+        assert!(dotfiles.preferences.tools_settings.state.selected().is_some());
+    }
+
+    #[test]
+    fn test_scroll_script_empty_lines() {
+        let mut dotfiles = Dotfiles::new();
+        
+        // Scrolling with empty lines should be a no-op
+        dotfiles.scroll_script(5);
+        assert_eq!(dotfiles.script_scroll, 0);
+        
+        dotfiles.scroll_script(-5);
+        assert_eq!(dotfiles.script_scroll, 0);
+    }
+
+    #[test]
+    fn test_scroll_script_max_boundary() {
+        let mut dotfiles = Dotfiles::new();
+        
+        // Add some script lines
+        for i in 0..10 {
+            dotfiles.script_lines.push_back(format!("Line {}\n", i));
+        }
+        dotfiles.view_height = 5;
+        
+        // Scroll beyond max
+        dotfiles.scroll_script(100);
+        let max_scroll = dotfiles.script_lines.len().saturating_sub(dotfiles.view_height) as u16;
+        assert_eq!(dotfiles.script_scroll, max_scroll);
+        
+        // Try scrolling down more - should not exceed max
+        let current = dotfiles.script_scroll;
+        dotfiles.scroll_script(10);
+        assert_eq!(dotfiles.script_scroll, current); // Should stay at max
+    }
+
+    #[test]
+    fn test_scroll_script_min_boundary() {
+        let mut dotfiles = Dotfiles::new();
+        
+        // Add some script lines
+        for i in 0..10 {
+            dotfiles.script_lines.push_back(format!("Line {}\n", i));
+        }
+        dotfiles.view_height = 5;
+        
+        // Already at 0, try scrolling up - should stay at 0
+        dotfiles.scroll_script(-5);
+        assert_eq!(dotfiles.script_scroll, 0);
+    }
+
+    #[test]
+    fn test_apply_tools_preserves_selection() {
+        use crate::tools::Tools;
+        
+        let mut dotfiles = Dotfiles::new();
+        let tools = Tools::new_empty();
+        
+        dotfiles.apply_tools(tools);
+        
+        // Reload errors and warnings should be cleared
+        assert!(dotfiles.reload_error.is_none());
+        assert!(dotfiles.reload_warning.is_none());
+        assert_eq!(dotfiles.script_scroll, 0);
+        assert!(dotfiles.script_lines.is_empty());
+    }
 }

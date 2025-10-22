@@ -246,4 +246,98 @@ Preferences:
             }
         }
     }
+
+    #[test]
+    fn test_tool_identifier_with_whitespace() {
+        let tool = Tool {
+            id: Some("  my-tool  ".to_string()),
+            name: Some("MyTool".to_string()),
+            root: None,
+            file: None,
+            dependencies: vec![],
+        };
+
+        assert_eq!(tool.identifier(), Some("my-tool".to_string()));
+    }
+
+    #[test]
+    fn test_tool_identifier_empty_string() {
+        let tool = Tool {
+            id: Some("   ".to_string()),
+            name: Some("MyTool".to_string()),
+            root: None,
+            file: None,
+            dependencies: vec![],
+        };
+
+        assert!(tool.identifier().is_none());
+    }
+
+    #[test]
+    fn test_tool_dependencies_filtering() {
+        let tool = Tool {
+            id: None,
+            name: Some("MyTool".to_string()),
+            root: None,
+            file: None,
+            dependencies: vec![
+                "dep1".to_string(),
+                "  dep2  ".to_string(),
+                "".to_string(),
+                "   ".to_string(),
+                "dep3".to_string(),
+            ],
+        };
+
+        let deps = tool.dependencies();
+        assert_eq!(deps.len(), 3);
+        assert_eq!(deps[0], "dep1");
+        assert_eq!(deps[1], "dep2");
+        assert_eq!(deps[2], "dep3");
+    }
+
+    #[test]
+    fn test_tool_root_name_with_empty_root() {
+        let tool = Tool {
+            id: None,
+            name: Some("MyTool".to_string()),
+            root: Some("".to_string()),
+            file: None,
+            dependencies: vec![],
+        };
+
+        assert_eq!(tool.root_name(), "mytool");
+    }
+
+    #[test]
+    fn test_tool_file_name_default() {
+        let tool = Tool {
+            id: None,
+            name: Some("My Tool".to_string()),
+            root: None,
+            file: None,
+            dependencies: vec![],
+        };
+
+        assert_eq!(tool.file_name(), "my tool-settings.zsh");
+    }
+
+    #[test]
+    fn test_tool_name_when_none() {
+        let tool = Tool {
+            id: None,
+            name: None,
+            root: None,
+            file: None,
+            dependencies: vec![],
+        };
+
+        assert_eq!(tool.name(), "unknown");
+    }
+
+    #[test]
+    fn test_expand_home_path_without_tilde() {
+        let path = expand_home_path("relative/path");
+        assert_eq!(path, PathBuf::from("relative/path"));
+    }
 }

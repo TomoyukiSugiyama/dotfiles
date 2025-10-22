@@ -417,4 +417,89 @@ mod tests {
         
         assert!(workflow.reload_warning.is_none());
     }
+
+    #[test]
+    fn test_scroll_log_empty_lines() {
+        let mut workflow = Workflow::new_for_test();
+        
+        // Scrolling with empty lines should be a no-op
+        workflow.scroll_log(5);
+        assert_eq!(workflow.log_scroll, 0);
+        
+        workflow.scroll_log(-5);
+        assert_eq!(workflow.log_scroll, 0);
+    }
+
+    #[test]
+    fn test_scroll_log_max_boundary() {
+        let mut workflow = Workflow::new_for_test();
+        
+        // Add some log lines
+        for i in 0..10 {
+            workflow.log_lines.push_back(format!("Line {}\n", i));
+        }
+        workflow.view_height = 5;
+        
+        // Scroll beyond max
+        workflow.scroll_log(100);
+        let max_scroll = workflow.log_lines.len().saturating_sub(workflow.view_height) as u16;
+        assert_eq!(workflow.log_scroll, max_scroll);
+        
+        // Try scrolling down more - should not exceed max
+        let current = workflow.log_scroll;
+        workflow.scroll_log(10);
+        assert_eq!(workflow.log_scroll, current); // Should stay at max
+    }
+
+    #[test]
+    fn test_scroll_log_min_boundary() {
+        let mut workflow = Workflow::new_for_test();
+        
+        // Add some log lines
+        for i in 0..10 {
+            workflow.log_lines.push_back(format!("Line {}\n", i));
+        }
+        workflow.view_height = 5;
+        
+        // Already at 0, try scrolling up - should stay at 0
+        workflow.scroll_log(-5);
+        assert_eq!(workflow.log_scroll, 0);
+    }
+
+    #[test]
+    fn test_apply_tools() {
+        use crate::tools::Tools;
+        
+        let mut workflow = Workflow::new_for_test();
+        let tools = Tools::new_empty();
+        
+        workflow.apply_tools(tools);
+        
+        // Reload warning should be cleared
+        assert!(workflow.reload_warning.is_none());
+    }
+
+    #[test]
+    fn test_prepared_tool_structure() {
+        let tool = PreparedTool {
+            name: "test_tool".to_string(),
+            script_path: "/path/to/script.sh".to_string(),
+        };
+        
+        assert_eq!(tool.name, "test_tool");
+        assert_eq!(tool.script_path, "/path/to/script.sh");
+    }
+
+    #[test]
+    fn test_execute_selected_with_run_tools() {
+        let mut workflow = Workflow::new_for_test();
+        workflow.menu.state.select_first();
+        workflow.view = ViewTab::Menu;
+        
+        // Execute should switch to log view
+        workflow.execute_selected();
+        
+        assert_eq!(workflow.view, ViewTab::Log);
+        assert!(workflow.pending_scroll_to_bottom);
+    }
 }

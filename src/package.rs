@@ -968,4 +968,194 @@ mod tests {
         // Different path should succeed
         assert!(check_path(&mut seen, "file2.txt").is_ok());
     }
+
+    #[test]
+    fn test_rewrite_config_root_basic() {
+        use tempfile::NamedTempFile;
+        use std::path::PathBuf;
+        
+        let mut temp_file = NamedTempFile::new().unwrap();
+        let content = r#"# Config file
+SystemPreferences:
+  Root: /old/path
+Preferences:
+  ToolsSettings:
+    - Name: Test
+"#;
+        std::io::Write::write_all(&mut temp_file, content.as_bytes()).unwrap();
+        let path = temp_file.path();
+        
+        let new_root = PathBuf::from("/new/path");
+        rewrite_config_root(path, &new_root).unwrap();
+        
+        let result = fs::read_to_string(path).unwrap();
+        assert!(result.contains("Root: /new/path"));
+        assert!(!result.contains("Root: /old/path"));
+    }
+
+    #[test]
+    fn test_rewrite_config_root_with_comments() {
+        use tempfile::NamedTempFile;
+        use std::path::PathBuf;
+        
+        let mut temp_file = NamedTempFile::new().unwrap();
+        let content = r#"SystemPreferences:
+  # This is a comment
+  Root: /old/path
+  # Another comment
+Preferences:
+  ToolsSettings: []
+"#;
+        std::io::Write::write_all(&mut temp_file, content.as_bytes()).unwrap();
+        let path = temp_file.path();
+        
+        let new_root = PathBuf::from("/new/path");
+        rewrite_config_root(path, &new_root).unwrap();
+        
+        let result = fs::read_to_string(path).unwrap();
+        assert!(result.contains("Root: /new/path"));
+        assert!(result.contains("# This is a comment"));
+        assert!(result.contains("# Another comment"));
+    }
+
+    #[test]
+    fn test_file_mode_unix() {
+        #[cfg(unix)]
+        {
+            use tempfile::NamedTempFile;
+            use std::os::unix::fs::PermissionsExt;
+            
+            let temp_file = NamedTempFile::new().unwrap();
+            let path = temp_file.path();
+            
+            // Set specific permissions
+            let perms = fs::Permissions::from_mode(0o755);
+            fs::set_permissions(path, perms).unwrap();
+            
+            let metadata = fs::metadata(path).unwrap();
+            let mode = file_mode(&metadata);
+            
+            assert_eq!(mode & 0o777, 0o755);
+        }
+        
+        #[cfg(not(unix))]
+        {
+            let metadata = fs::metadata(".").unwrap();
+            let mode = file_mode(&metadata);
+            assert_eq!(mode, 0o644);
+        }
+    }
+
+    #[test]
+    fn test_ensure_destination_parent() {
+        use tempfile::TempDir;
+        
+        let temp_dir = TempDir::new().unwrap();
+        let nested_path = temp_dir.path().join("nested").join("dir").join("file.txt");
+        
+        ensure_destination_parent(&nested_path).unwrap();
+        
+        // Parent directories should be created
+        assert!(nested_path.parent().unwrap().exists());
+    }
+
+    #[test]
+    fn test_relative_path_success() {
+        let root = Path::new("/root/path");
+        let path = Path::new("/root/path/sub/file.txt");
+        
+        let result = relative_path(path, root).unwrap();
+        assert_eq!(result, PathBuf::from("sub/file.txt"));
+    }
+
+    #[test]
+    fn test_relative_path_outside_root() {
+        let root = Path::new("/root/path");
+        let path = Path::new("/other/path/file.txt");
+        
+        let result = relative_path(path, root);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(PackageError::PathOutsideRoot { .. })));
+    }
+
+    #[test]
+    fn test_manifest_file_structure() {
+        let manifest_file = ManifestFile {
+            path: "test/file.txt".to_string(),
+            sha256: "abc123".to_string(),
+            mode: 0o644,
+            size: 1024,
+        };
+        
+        assert_eq!(manifest_file.path, "test/file.txt");
+        assert_eq!(manifest_file.sha256, "abc123");
+        assert_eq!(manifest_file.mode, 0o644);
+        assert_eq!(manifest_file.size, 1024);
+    }
+
+    #[test]
+    fn test_manifest_tool_entry_structure() {
+        let entry = ManifestToolEntry {
+            id: "tool1".to_string(),
+            name: "Tool 1".to_string(),
+            root: "tool1".to_string(),
+            file: "tool1.sh".to_string(),
+            dependencies: vec!["tool2".to_string()],
+            artifact: ManifestFile {
+                path: "tool1/tool1.sh".to_string(),
+                sha256: "def456".to_string(),
+                mode: 0o755,
+                size: 2048,
+            },
+            related_files: vec![],
+        };
+        
+        assert_eq!(entry.id, "tool1");
+        assert_eq!(entry.dependencies.len(), 1);
+        assert_eq!(entry.artifact.mode, 0o755);
+    }
+
+    #[test]
+    fn test_validate_manifest_paths_duplicate() {
+        let manifest = Manifest {
+            version: MANIFEST_VERSION,
+            generated_at: "2024-01-01T00:00:00Z".to_string(),
+            original_root: "/test".to_string(),
+            config: ManifestFile {
+                path: "config.yaml".to_string(),
+                sha256: "hash1".to_string(),
+                mode: 0o644,
+                size: 100,
+            },
+            tools: vec![
+                ManifestToolEntry {
+                    id: "tool1".to_string(),
+                    name: "Tool 1".to_string(),
+                    root: "tool1".to_string(),
+                    file: "tool1.sh".to_string(),
+                    dependencies: vec![],
+                    artifact: ManifestFile {
+                        path: "config.yaml".to_string(), // Duplicate!
+                        sha256: "hash2".to_string(),
+                        mode: 0o755,
+                        size: 200,
+                    },
+                    related_files: vec![],
+                },
+            ],
+        };
+        
+        let result = validate_manifest_paths(&manifest);
+        assert!(result.is_err());
+        assert!(matches!(result, Err(PackageError::DuplicatePath { .. })));
+    }
+
+    #[test]
+    fn test_path_to_string_with_backslashes() {
+        // Test that backslashes are converted to forward slashes
+        let path = Path::new("test").join("sub").join("file.txt");
+        let result = path_to_string(&path);
+        assert!(!result.contains('\\'));
+        assert!(result.contains('/') || !result.contains(std::path::MAIN_SEPARATOR));
+    }
 }

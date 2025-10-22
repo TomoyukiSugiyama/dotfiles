@@ -82,4 +82,25 @@ mod tests {
         app.on_key_event(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE));
         assert_eq!(app.selected_tab, initial_tab);
     }
+
+    #[test]
+    fn test_on_key_event_ctrl_c() {
+        let mut app = App::new();
+        assert!(app.running);
+        
+        // Test Ctrl+C (capital C)
+        app.on_key_event(KeyEvent::new(KeyCode::Char('C'), KeyModifiers::CONTROL));
+        assert!(!app.running);
+    }
+
+    #[test]
+    fn test_on_key_event_reload() {
+        let mut app = App::new();
+        
+        // Test 'r' key for reload (should not crash)
+        app.on_key_event(KeyEvent::new(KeyCode::Char('r'), KeyModifiers::NONE));
+        
+        // Test 'R' key for reload (should not crash)
+        app.on_key_event(KeyEvent::new(KeyCode::Char('R'), KeyModifiers::NONE));
+    }
 }

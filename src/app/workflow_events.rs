@@ -110,4 +110,31 @@ mod tests {
         workflow.on_key_event(KeyEvent::new(KeyCode::End, KeyModifiers::NONE));
         assert_eq!(workflow.log_scroll, 10); // 20 - 10
     }
+
+    #[test]
+    fn test_workflow_on_key_event_enter_executes() {
+        let mut workflow = Workflow::new_for_test();
+        workflow.view = ViewTab::Menu;
+        workflow.menu.select_first();
+        
+        // Test Enter key
+        workflow.on_key_event(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
+        
+        // Should switch to log view after execution
+        assert_eq!(workflow.view, ViewTab::Log);
+    }
+
+    #[test]
+    fn test_workflow_on_key_event_menu_home_end() {
+        let mut workflow = Workflow::new_for_test();
+        workflow.view = ViewTab::Menu;
+        
+        // Test End key in menu
+        workflow.on_key_event(KeyEvent::new(KeyCode::End, KeyModifiers::NONE));
+        // Menu should be at last item
+        
+        // Test Home key in menu
+        workflow.on_key_event(KeyEvent::new(KeyCode::Home, KeyModifiers::NONE));
+        assert_eq!(workflow.menu.state.selected(), Some(0));
+    }
 }

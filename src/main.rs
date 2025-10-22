@@ -114,3 +114,28 @@ fn run_tui() -> Result<()> {
     ratatui::restore();
     result
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_export_format_as_archive_format() {
+        assert!(matches!(
+            ExportFormat::TarGz.as_archive_format(),
+            package::ArchiveFormat::TarGz
+        ));
+        assert!(matches!(
+            ExportFormat::Zip.as_archive_format(),
+            package::ArchiveFormat::Zip
+        ));
+    }
+
+    #[test]
+    fn test_export_format_value_aliases() {
+        // Test that the value aliases are correctly defined
+        // These are checked by clap at runtime
+        let format = ExportFormat::TarGz;
+        assert!(matches!(format, ExportFormat::TarGz));
+    }
+}

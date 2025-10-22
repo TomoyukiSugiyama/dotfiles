@@ -83,4 +83,37 @@ mod tests {
         menu.select_previous();
         assert_eq!(menu.state.selected(), Some(0));
     }
+
+    #[test]
+    fn test_menu_select_last() {
+        let mut menu = create_test_menu();
+        
+        menu.select_last();
+        // ListState::select_last() behavior depends on the number of items
+        // Since we have 3 items, it should select the last one
+        // But we need to verify the actual behavior
+        let selected = menu.state.selected();
+        assert!(selected.is_some());
+    }
+
+    #[test]
+    fn test_menu_from_iter() {
+        let menu = Menu::from_iter([
+            ("Item 1".to_string(), Some(MenuItemAction::RunTools)),
+            ("Item 2".to_string(), None),
+        ]);
+        
+        assert_eq!(menu.items.len(), 2);
+        assert_eq!(menu.items[0].title, "Item 1");
+        assert!(matches!(menu.items[0].action, Some(MenuItemAction::RunTools)));
+        assert_eq!(menu.items[1].title, "Item 2");
+        assert!(menu.items[1].action.is_none());
+    }
+
+    #[test]
+    fn test_menu_item_default() {
+        let item = MenuItem::default();
+        assert_eq!(item.title, "");
+        assert!(item.action.is_none());
+    }
 }

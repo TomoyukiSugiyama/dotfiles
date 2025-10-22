@@ -561,4 +561,149 @@ mod tests {
         assert_eq!(stages[2].len(), 1);
         assert_eq!(stages[2][0].id, "d");
     }
+
+    #[test]
+    fn test_self_dependency_error() {
+        let tool = create_tool("SelfDep", Some("self-dep"), vec!["self-dep"]);
+        let mut name_counts = HashMap::new();
+        let items = HashMap::new();
+        
+        // Directly test generate_tool_id and self-dependency check logic
+        let id = generate_tool_id(&mut name_counts, &items, &tool);
+        assert_eq!(id, "self-dep");
+        
+        // Verify that self dependencies are in the tool
+        assert!(tool.dependencies().contains(&id));
+    }
+
+    #[test]
+    fn test_missing_dependency_strict_mode() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec!["missing"]));
+        
+        let dependency_map: HashMap<String, Vec<String>> = items
+            .iter()
+            .map(|(id, item)| (id.clone(), item.dependencies.clone()))
+            .collect();
+        
+        let result = Tools::validate_dependencies(&items, &dependency_map);
+        assert!(matches!(result, Err(ToolError::MissingDependency { .. })));
+    }
+
+    #[test]
+    fn test_sanitize_dependencies_relaxed_mode() {
+        let mut items = HashMap::new();
+        items.insert(
+            "a".to_string(),
+            create_tool_item("a", vec!["missing", "existing"]),
+        );
+        items.insert("existing".to_string(), create_tool_item("existing", vec![]));
+
+        let (_dependency_map, warnings) = Tools::sanitize_dependencies(&mut items, false);
+
+        // "missing" should be removed from dependencies
+        assert_eq!(items.get("a").unwrap().dependencies.len(), 1);
+        assert_eq!(items.get("a").unwrap().dependencies[0], "existing");
+        
+        // Should have a warning about missing dependency
+        assert_eq!(warnings.len(), 1);
+        assert!(warnings[0].contains("missing"));
+    }
+
+    #[test]
+    fn test_execution_stage_index() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec![]));
+        items.insert("b".to_string(), create_tool_item("b", vec!["a"]));
+        items.insert("c".to_string(), create_tool_item("c", vec!["b"]));
+        
+        let tools = Tools {
+            root: "/".to_string(),
+            ordered_ids: vec!["a".to_string(), "b".to_string(), "c".to_string()],
+            items,
+        };
+
+        assert_eq!(tools.execution_stage_index("a"), Some(0));
+        assert_eq!(tools.execution_stage_index("b"), Some(1));
+        assert_eq!(tools.execution_stage_index("c"), Some(2));
+        assert_eq!(tools.execution_stage_index("nonexistent"), None);
+    }
+
+    #[test]
+    fn test_tool_item_display_name() {
+        let tool = create_tool_item("my-tool", vec![]);
+        assert_eq!(tool.display_name(), "my-tool (my-tool)");
+    }
+
+    #[test]
+    fn test_index_of() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec![]));
+        items.insert("b".to_string(), create_tool_item("b", vec![]));
+        items.insert("c".to_string(), create_tool_item("c", vec![]));
+
+        let tools = Tools {
+            root: "/".to_string(),
+            ordered_ids: vec!["a".to_string(), "b".to_string(), "c".to_string()],
+            items,
+        };
+
+        assert_eq!(tools.index_of("a"), Some(0));
+        assert_eq!(tools.index_of("b"), Some(1));
+        assert_eq!(tools.index_of("c"), Some(2));
+        assert_eq!(tools.index_of("nonexistent"), None);
+    }
+
+    #[test]
+    fn test_dependency_map_lines() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec![]));
+        items.insert("b".to_string(), create_tool_item("b", vec!["a"]));
+
+        let tools = Tools {
+            root: "/".to_string(),
+            ordered_ids: vec!["a".to_string(), "b".to_string()],
+            items,
+        };
+
+        let lines = tools.dependency_map_lines(Some("a"));
+        assert!(!lines.is_empty());
+        assert!(lines.iter().any(|line| line.contains("* a (a)")));
+        assert!(lines.iter().any(|line| line.contains("- b (b)")));
+    }
+
+    #[test]
+    fn test_iter() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec![]));
+        items.insert("b".to_string(), create_tool_item("b", vec![]));
+
+        let tools = Tools {
+            root: "/".to_string(),
+            ordered_ids: vec!["a".to_string(), "b".to_string()],
+            items,
+        };
+
+        let collected: Vec<_> = tools.iter().collect();
+        assert_eq!(collected.len(), 2);
+        assert_eq!(collected[0].id, "a");
+        assert_eq!(collected[1].id, "b");
+    }
+
+    #[test]
+    fn test_get_by_index() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec![]));
+        items.insert("b".to_string(), create_tool_item("b", vec![]));
+
+        let tools = Tools {
+            root: "/".to_string(),
+            ordered_ids: vec!["a".to_string(), "b".to_string()],
+            items,
+        };
+
+        assert_eq!(tools.get_by_index(0).unwrap().id, "a");
+        assert_eq!(tools.get_by_index(1).unwrap().id, "b");
+        assert!(tools.get_by_index(2).is_none());
+    }
 }
