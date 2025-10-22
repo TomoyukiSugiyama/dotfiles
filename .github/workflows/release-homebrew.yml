@@ -116,39 +116,25 @@ jobs:
           HOMEPAGE="https://github.com/${{ github.repository }}"
 
           if [ ! -f "$FORMULA_FILE" ]; then
-            python3 <<'PY'
-import os
-import pathlib
-import textwrap
+            mkdir -p "$(dirname "$FORMULA_FILE")"
+            cat > "$FORMULA_FILE" <<EOF
+class Dotfiles < Formula
+  desc "Terminal UI and CLI for dotfiles management"
+  homepage "$HOMEPAGE"
+  version "0.0.0"
+  url "https://example.invalid/dotfiles-0.0.0.tar.gz"
+  sha256 "000"
+  license "MIT"
 
-formula_path = pathlib.Path(os.environ["FORMULA_FILE"])
-formula_path.parent.mkdir(parents=True, exist_ok=True)
+  def install
+    bin.install "$PROJECT_NAME"
+  end
 
-if not formula_path.exists():
-    homepage = os.environ["HOMEPAGE"]
-    project = os.environ["PROJECT_NAME"]
-    template = textwrap.dedent(
-        """\
-        class Dotfiles < Formula
-          desc "Terminal UI and CLI for dotfiles management"
-          homepage "{homepage}"
-          version "0.0.0"
-          url "https://example.invalid/dotfiles-0.0.0.tar.gz"
-          sha256 "000"
-          license "MIT"
-
-          def install
-            bin.install "{project}"
-          end
-
-          test do
-            system "#{{bin}}/{project}", "--help"
-          end
-        end
-        """
-    ).format(homepage=homepage, project=project)
-    formula_path.write_text(template, encoding="utf-8")
-PY
+  test do
+    system "#{bin}/$PROJECT_NAME", "--help"
+  end
+end
+EOF
           fi
 
           perl -0pi -e 's/^\s*version\s+"[^"]+"$/${ENV{VERSION_LINE}}/m' "$FORMULA_FILE"
