@@ -110,20 +110,16 @@ jobs:
           set -euo pipefail
           FORMULA_FILE="tap-repo/${HOMEBREW_TAP_FORMULA_PATH}"
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/${{ steps.package.outputs.archive_name }}"
-          VERSION_LINE="  version \"${{ steps.version.outputs.version }}\""
-          URL_LINE="  url \"${DOWNLOAD_URL}\""
-          SHA_LINE="  sha256 \"${{ steps.checksum.outputs.sha256 }}\""
           HOMEPAGE="https://github.com/${{ github.repository }}"
 
-          if [ ! -f "$FORMULA_FILE" ]; then
-            mkdir -p "$(dirname "$FORMULA_FILE")"
-            cat > "$FORMULA_FILE" <<EOF
+          mkdir -p "$(dirname "$FORMULA_FILE")"
+          cat <<EOF > "$FORMULA_FILE"
 class Dotfiles < Formula
   desc "Terminal UI and CLI for dotfiles management"
   homepage "$HOMEPAGE"
-  version "0.0.0"
-  url "https://example.invalid/dotfiles-0.0.0.tar.gz"
-  sha256 "000"
+  url "$DOWNLOAD_URL"
+  sha256 "${{ steps.checksum.outputs.sha256 }}"
+  version "${{ steps.version.outputs.version }}"
   license "MIT"
 
   def install
@@ -135,11 +131,6 @@ class Dotfiles < Formula
   end
 end
 EOF
-          fi
-
-          perl -0pi -e 's/^\s*version\s+"[^"]+"$/${ENV{VERSION_LINE}}/m' "$FORMULA_FILE"
-          perl -0pi -e 's/^\s*url\s+"[^"]+"$/${ENV{URL_LINE}}/m' "$FORMULA_FILE"
-          perl -0pi -e 's/^\s*sha256\s+"[^"]+"$/${ENV{SHA_LINE}}/m' "$FORMULA_FILE"
 
           git -C tap-repo status --short
 
