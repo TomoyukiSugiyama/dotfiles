@@ -138,11 +138,11 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          commit-message: "chore: bump ${PROJECT_NAME} to ${{ steps.version.outputs.version }}"
+          commit-message: "chore: bump ${{ env.PROJECT_NAME }} to ${{ steps.version.outputs.version }}"
           branch: release/${{ env.PROJECT_NAME }}-${{ steps.version.outputs.version }}
-          title: "chore: update ${PROJECT_NAME} to v${{ steps.version.outputs.version }}"
+          title: "chore: update ${{ env.PROJECT_NAME }} to v${{ steps.version.outputs.version }}"
           body: |
-            Automated update for `${PROJECT_NAME}` Homebrew formula.
+            Automated update for `${{ env.PROJECT_NAME }}` Homebrew formula.
 
             - Version: `${{ steps.version.outputs.version }}`
             - SHA256: `${{ steps.checksum.outputs.sha256 }}`
