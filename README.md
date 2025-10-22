@@ -23,6 +23,17 @@
 
 ## Installation
 
+### Homebrew (recommended)
+
+```sh
+brew tap TomoyukiSugiyama/homebrew-tap
+brew "tomoyukisugiyama/tap/dotfiles"
+```
+
+To upgrade later, run `brew upgrade dotfiles`.
+
+### Build from source
+
 ```sh
 git clone https://github.com/your-user/dotfiles.git
 cd dotfiles
@@ -31,7 +42,7 @@ cargo build --release
 cargo install --path .
 ```
 
-After compiling you can either launch the TUI directly from the build directory or run `dotfiles` from `~/.cargo/bin` if you installed it.
+Once installed you can launch the TUI with `dotfiles --tui` (or simply `dotfiles`) and run the CLI subcommands directly (e.g. `dotfiles export`).
 
 ## Configuration
 
@@ -63,6 +74,8 @@ Dependencies must reference the `Id` (explicit or generated) of another tool ent
 cargo run --release
 # or, if installed:
 dotfiles --tui
+# the binary also launches the TUI by default
+dotfiles
 ```
 
 The UI opens with two tabs:
