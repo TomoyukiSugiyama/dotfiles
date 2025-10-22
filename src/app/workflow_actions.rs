@@ -342,3 +342,79 @@ impl Workflow {
             .spawn()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_tool_run_result_success() {
+        let result = ToolRunResult::success("test_tool".to_string());
+        assert!(result.is_success());
+        assert!(result.failure_reason().is_none());
+    }
+
+    #[test]
+    fn test_tool_run_result_failed() {
+        let result = ToolRunResult::failed("test_tool".to_string(), "error message".to_string());
+        assert!(!result.is_success());
+        assert_eq!(result.failure_reason(), Some("error message"));
+    }
+
+    #[test]
+    fn test_scroll_log() {
+        let mut workflow = Workflow::new_for_test();
+        
+        // Add some log lines
+        for i in 0..20 {
+            workflow.log_lines.push_back(format!("Line {}\n", i));
+        }
+        workflow.view_height = 10;
+        
+        // Test scroll down
+        workflow.scroll_log(5);
+        assert_eq!(workflow.log_scroll, 5);
+        
+        // Test scroll up
+        workflow.scroll_log(-2);
+        assert_eq!(workflow.log_scroll, 3);
+        
+        // Test scroll to bottom
+        workflow.scroll_log_to_bottom();
+        assert_eq!(workflow.log_scroll, 10); // 20 - 10
+        
+        // Test scroll to top
+        workflow.scroll_log_to_top();
+        assert_eq!(workflow.log_scroll, 0);
+    }
+
+    #[test]
+    fn test_show_reload_error() {
+        let mut workflow = Workflow::new_for_test();
+        
+        workflow.show_reload_error("Test error".to_string());
+        
+        assert_eq!(workflow.log_lines.len(), 1);
+        assert_eq!(workflow.log_lines[0], "Test error\n");
+        assert!(workflow.pending_scroll_to_bottom);
+    }
+
+    #[test]
+    fn test_show_reload_warning() {
+        let mut workflow = Workflow::new_for_test();
+        
+        workflow.show_reload_warning("Warning".to_string());
+        
+        assert_eq!(workflow.reload_warning, Some("Warning".to_string()));
+    }
+
+    #[test]
+    fn test_clear_reload_warning() {
+        let mut workflow = Workflow::new_for_test();
+        workflow.reload_warning = Some("Warning".to_string());
+        
+        workflow.clear_reload_warning();
+        
+        assert!(workflow.reload_warning.is_none());
+    }
+}

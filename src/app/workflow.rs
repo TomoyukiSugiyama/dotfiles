@@ -56,4 +56,47 @@ impl Workflow {
             reload_warning: None,
         }
     }
+
+    #[cfg(test)]
+    pub(crate) fn new_for_test() -> Self {
+        let (log_sender, log_receiver) = mpsc::unbounded_channel();
+        let mut menu = Menu::from_iter([("Run Tools".to_string(), Some(MenuItemAction::RunTools))]);
+        menu.state.select_first();
+        
+        Self {
+            menu,
+            runtime: Runtime::new().expect("failed to start tokio runtime"),
+            log_sender,
+            log_receiver,
+            log_lines: VecDeque::new(),
+            log_scroll: 0,
+            view_height: 0,
+            pending_scroll_to_bottom: false,
+            view: ViewTab::Menu,
+            tools: Tools::new_empty(),
+            reload_warning: None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_view_tab_next() {
+        assert_eq!(ViewTab::Menu.next(), ViewTab::Log);
+        assert_eq!(ViewTab::Log.next(), ViewTab::Menu);
+    }
+
+    #[test]
+    fn test_workflow_new() {
+        let workflow = Workflow::new_for_test();
+        assert_eq!(workflow.view, ViewTab::Menu);
+        assert_eq!(workflow.log_scroll, 0);
+        assert_eq!(workflow.view_height, 0);
+        assert!(!workflow.pending_scroll_to_bottom);
+        assert!(workflow.reload_warning.is_none());
+        assert!(workflow.menu.state.selected().is_some());
+    }
 }

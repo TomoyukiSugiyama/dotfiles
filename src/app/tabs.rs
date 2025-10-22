@@ -35,3 +35,31 @@ impl SelectedTab {
         *self = self.previous();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_selected_tab_new() {
+        let tab = SelectedTab::new();
+        assert_eq!(tab, SelectedTab::Workflow);
+    }
+
+    #[test]
+    fn test_selected_tab_navigation() {
+        let mut tab = SelectedTab::Workflow;
+        
+        tab.select_next_tab();
+        assert_eq!(tab, SelectedTab::Dotfiles);
+        
+        tab.select_next_tab();
+        assert_eq!(tab, SelectedTab::Workflow);
+        
+        tab.select_previous_tab();
+        assert_eq!(tab, SelectedTab::Dotfiles);
+        
+        tab.select_previous_tab();
+        assert_eq!(tab, SelectedTab::Workflow);
+    }
+}

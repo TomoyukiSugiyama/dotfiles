@@ -870,3 +870,102 @@ fn create_root_symlink(original_root: &str, destination_root: &Path) -> Result<(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_archive_format_extension() {
+        assert_eq!(ArchiveFormat::TarGz.extension(), "tar.gz");
+        assert_eq!(ArchiveFormat::Zip.extension(), "zip");
+    }
+
+    #[test]
+    fn test_detect_archive_format() {
+        assert!(matches!(
+            detect_archive_format(Path::new("test.tar.gz")),
+            Ok(ArchiveFormat::TarGz)
+        ));
+        assert!(matches!(
+            detect_archive_format(Path::new("test.zip")),
+            Ok(ArchiveFormat::Zip)
+        ));
+        assert!(detect_archive_format(Path::new("test.txt")).is_err());
+    }
+
+    #[test]
+    fn test_validate_relative_path() {
+        // Safe paths
+        assert!(validate_relative_path("test/file.txt").is_ok());
+        assert!(validate_relative_path("file.txt").is_ok());
+        
+        // Unsafe paths with parent directory
+        assert!(validate_relative_path("../file.txt").is_err());
+        assert!(validate_relative_path("test/../file.txt").is_err());
+        
+        // Absolute paths
+        assert!(validate_relative_path("/etc/passwd").is_err());
+    }
+
+    #[test]
+    fn test_compute_sha256_reader() {
+        let data = b"Hello, World!";
+        let reader = Cursor::new(data);
+        let hash = compute_sha256_reader(reader).unwrap();
+        
+        // Expected SHA256 hash of "Hello, World!"
+        let expected = "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f";
+        assert_eq!(hash, expected);
+    }
+
+    #[test]
+    fn test_finalize_destination() {
+        // Path without extension
+        let path = Path::new("test");
+        let result = finalize_destination(path, ArchiveFormat::TarGz);
+        assert!(result.to_string_lossy().ends_with(".tar.gz"));
+        
+        let result = finalize_destination(path, ArchiveFormat::Zip);
+        assert!(result.to_string_lossy().ends_with(".zip"));
+        
+        // Path with matching extension
+        let path = Path::new("myfile.zip");
+        let result = finalize_destination(path, ArchiveFormat::Zip);
+        assert_eq!(result.to_string_lossy(), "myfile.zip");
+        
+        // Path with different extension gets replaced
+        let path = Path::new("myfile.txt");
+        let result = finalize_destination(path, ArchiveFormat::Zip);
+        assert_eq!(result.to_string_lossy(), "myfile.zip");
+    }
+
+    #[test]
+    fn test_default_archive_name() {
+        let result = default_archive_name("tar.gz");
+        assert!(result.to_string_lossy().contains("dotfiles"));
+        assert!(result.to_string_lossy().ends_with(".tar.gz"));
+    }
+
+    #[test]
+    fn test_path_to_string() {
+        let path = Path::new("test/file.txt");
+        let result = path_to_string(path);
+        assert_eq!(result, "test/file.txt");
+    }
+
+    #[test]
+    fn test_check_path() {
+        let mut seen = HashSet::new();
+        
+        // First insertion should succeed
+        assert!(check_path(&mut seen, "file1.txt").is_ok());
+        
+        // Duplicate should fail
+        assert!(check_path(&mut seen, "file1.txt").is_err());
+        
+        // Different path should succeed
+        assert!(check_path(&mut seen, "file2.txt").is_ok());
+    }
+}

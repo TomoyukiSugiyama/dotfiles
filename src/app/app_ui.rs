@@ -48,3 +48,33 @@ impl Widget for &mut App {
         self.render_footer(footer_area, buffer);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    #[test]
+    fn test_render_app_workflow_tab() {
+        let mut app = App::new();
+        app.selected_tab = SelectedTab::Workflow;
+        
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(&mut app, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_app_dotfiles_tab() {
+        let mut app = App::new();
+        app.selected_tab = SelectedTab::Dotfiles;
+        
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(&mut app, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+}

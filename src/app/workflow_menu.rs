@@ -50,3 +50,37 @@ impl Menu {
         self.state.select_next();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_menu() -> Menu {
+        Menu::from_iter([
+            ("Item 1".to_string(), None),
+            ("Item 2".to_string(), None),
+            ("Item 3".to_string(), None),
+        ])
+    }
+
+    #[test]
+    fn test_menu_selection() {
+        let mut menu = create_test_menu();
+
+        // Test select_first
+        menu.select_first();
+        assert_eq!(menu.state.selected(), Some(0));
+
+        // Test select_next
+        menu.select_next();
+        assert_eq!(menu.state.selected(), Some(1));
+        menu.select_next();
+        assert_eq!(menu.state.selected(), Some(2));
+
+        // Test select_previous
+        menu.select_previous();
+        assert_eq!(menu.state.selected(), Some(1));
+        menu.select_previous();
+        assert_eq!(menu.state.selected(), Some(0));
+    }
+}

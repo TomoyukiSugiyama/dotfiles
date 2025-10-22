@@ -58,3 +58,25 @@ impl Dotfiles {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_view_tab_next() {
+        assert_eq!(ViewTab::Menu.next(), ViewTab::Script);
+        assert_eq!(ViewTab::Script.next(), ViewTab::Menu);
+    }
+
+    #[test]
+    fn test_dotfiles_new() {
+        let dotfiles = Dotfiles::new();
+        assert_eq!(dotfiles.view, ViewTab::Menu);
+        assert_eq!(dotfiles.script_scroll, 0);
+        assert_eq!(dotfiles.view_height, 0);
+        assert!(dotfiles.reload_error.is_none());
+        assert!(dotfiles.reload_warning.is_none());
+        assert!(dotfiles.preferences.tools_settings.state.selected().is_some());
+    }
+}

@@ -78,3 +78,38 @@ impl Widget for &mut Workflow {
         self.render_log(log_area, buffer, self.view == ViewTab::Log);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    #[test]
+    fn test_render_workflow_menu_view() {
+        let mut workflow = Workflow::new_for_test();
+        workflow.view = ViewTab::Menu;
+        
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_workflow_log_view() {
+        let mut workflow = Workflow::new_for_test();
+        workflow.view = ViewTab::Log;
+        
+        // Add some log lines for testing
+        workflow.log_lines.push_back("Starting workflow...\n".to_string());
+        workflow.log_lines.push_back("Running tools...\n".to_string());
+        workflow.log_lines.push_back("Completed successfully.\n".to_string());
+        
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+}

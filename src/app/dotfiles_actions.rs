@@ -98,3 +98,81 @@ impl Dotfiles {
         self.reload_warning = None;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scroll_script() {
+        let mut dotfiles = Dotfiles::new();
+        
+        // Add some script lines
+        for i in 0..20 {
+            dotfiles.script_lines.push_back(format!("Line {}\n", i));
+        }
+        dotfiles.view_height = 10;
+        
+        // Test scroll down
+        dotfiles.scroll_script(5);
+        assert_eq!(dotfiles.script_scroll, 5);
+        
+        // Test scroll up
+        dotfiles.scroll_script(-2);
+        assert_eq!(dotfiles.script_scroll, 3);
+        
+        // Test scroll to bottom
+        dotfiles.scroll_script_to_bottom();
+        assert_eq!(dotfiles.script_scroll, 10); // 20 - 10
+        
+        // Test scroll to top
+        dotfiles.scroll_script_to_top();
+        assert_eq!(dotfiles.script_scroll, 0);
+    }
+
+    #[test]
+    fn test_reset_script_view() {
+        let mut dotfiles = Dotfiles::new();
+        dotfiles.script_lines.push_back("Line 1\n".to_string());
+        dotfiles.script_scroll = 5;
+        
+        dotfiles.reset_script_view();
+        
+        assert_eq!(dotfiles.script_scroll, 0);
+        assert!(dotfiles.script_lines.is_empty());
+    }
+
+    #[test]
+    fn test_show_reload_error() {
+        let mut dotfiles = Dotfiles::new();
+        dotfiles.script_lines.push_back("Line 1\n".to_string());
+        dotfiles.script_scroll = 5;
+        
+        dotfiles.show_reload_error("Test error".to_string());
+        
+        assert_eq!(dotfiles.reload_error, Some("Test error".to_string()));
+        assert_eq!(dotfiles.script_scroll, 0);
+        assert!(dotfiles.script_lines.is_empty());
+    }
+
+    #[test]
+    fn test_show_reload_warning() {
+        let mut dotfiles = Dotfiles::new();
+        dotfiles.reload_error = Some("Error".to_string());
+        
+        dotfiles.show_reload_warning("Warning".to_string());
+        
+        assert!(dotfiles.reload_error.is_none());
+        assert_eq!(dotfiles.reload_warning, Some("Warning".to_string()));
+    }
+
+    #[test]
+    fn test_clear_reload_warning() {
+        let mut dotfiles = Dotfiles::new();
+        dotfiles.reload_warning = Some("Warning".to_string());
+        
+        dotfiles.clear_reload_warning();
+        
+        assert!(dotfiles.reload_warning.is_none());
+    }
+}

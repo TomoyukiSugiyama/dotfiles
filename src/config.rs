@@ -180,3 +180,70 @@ pub(crate) fn expand_home_path(path: &str) -> PathBuf {
         PathBuf::from(path)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_load_from_file() {
+        let dir = tempdir().unwrap();
+        let config_file = dir.path().join("config.yaml");
+        fs::write(
+            &config_file,
+            r#"
+SystemPreferences:
+  Root: /test/root
+Preferences:
+  ToolsSettings:
+    - Name: TestTool
+      Root: testtool
+      File: test.zsh
+"#,
+        )
+        .unwrap();
+
+        let config = Config::load_from_file(config_file.to_str().unwrap()).unwrap();
+        assert_eq!(config.root(), "/test/root");
+        assert_eq!(config.tools().len(), 1);
+        assert_eq!(config.tools()[0].name(), "TestTool");
+    }
+
+    #[test]
+    fn test_tool_defaults() {
+        let tool = Tool {
+            id: None,
+            name: Some("MyTool".to_string()),
+            root: None,
+            file: None,
+            dependencies: vec![],
+        };
+
+        assert_eq!(tool.name(), "MyTool");
+        assert_eq!(tool.root_name(), "mytool");
+        assert_eq!(tool.file_name(), "mytool-settings.zsh");
+        assert!(tool.identifier().is_none());
+    }
+
+    #[test]
+    fn test_expand_home_path() {
+        let original_home = std::env::var("HOME");
+        unsafe {
+            std::env::set_var("HOME", "/test/home");
+        }
+
+        let expanded = expand_home_path("~/test/path");
+        assert_eq!(expanded, PathBuf::from("/test/home/test/path"));
+
+        let not_expanded = expand_home_path("/absolute/path");
+        assert_eq!(not_expanded, PathBuf::from("/absolute/path"));
+
+        unsafe {
+            if let Ok(home) = original_home {
+                std::env::set_var("HOME", home);
+            }
+        }
+    }
+}

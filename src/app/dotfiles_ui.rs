@@ -244,3 +244,37 @@ impl Widget for &mut Dotfiles {
         self.render_view(view_area, buffer);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    #[test]
+    fn test_render_dotfiles_menu_view() {
+        let mut dotfiles = Dotfiles::new();
+        dotfiles.view = ViewTab::Menu;
+        
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_dotfiles_script_view() {
+        let mut dotfiles = Dotfiles::new();
+        dotfiles.view = ViewTab::Script;
+        
+        // Add some script lines for testing
+        dotfiles.script_lines.push_back("#!/bin/zsh\n".to_string());
+        dotfiles.script_lines.push_back("echo 'Hello World'\n".to_string());
+        
+        let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+}

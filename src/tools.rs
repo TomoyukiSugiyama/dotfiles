@@ -48,6 +48,15 @@ impl Tools {
         Self::load(false)
     }
 
+    #[cfg(test)]
+    pub(crate) fn new_empty() -> Self {
+        Self {
+            root: "~/.dotfiles".to_string(),
+            ordered_ids: vec![],
+            items: HashMap::new(),
+        }
+    }
+
     fn load(strict: bool) -> Result<(Self, Vec<String>), ToolError> {
         let config = Self::load_config()?;
         let root = config.root().to_string();
@@ -460,5 +469,96 @@ fn generate_tool_id(
 
         *count += 1;
         candidate
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config;
+
+    fn create_tool(name: &str, id: Option<&str>, dependencies: Vec<&str>) -> config::Tool {
+        config::Tool {
+            id: id.map(|s| s.to_string()),
+            name: Some(name.to_string()),
+            root: None,
+            file: None,
+            dependencies: dependencies.into_iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    fn create_tool_item(id: &str, dependencies: Vec<&str>) -> ToolItem {
+        ToolItem {
+            id: id.to_string(),
+            name: id.to_string(),
+            root: id.to_string(),
+            file: format!("{id}.sh"),
+            dependencies: dependencies.into_iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    #[test]
+    fn test_generate_tool_id() {
+        let mut name_counts = HashMap::new();
+        let mut items = HashMap::new();
+
+        let tool1 = create_tool("Tool A", Some("tool-a"), vec![]);
+        let id1 = generate_tool_id(&mut name_counts, &items, &tool1);
+        assert_eq!(id1, "tool-a");
+        items.insert(id1.clone(), create_tool_item(&id1, vec![]));
+
+        let tool2 = create_tool("Tool B", None, vec![]);
+        let id2 = generate_tool_id(&mut name_counts, &items, &tool2);
+        assert_eq!(id2, "tool-b");
+        items.insert(id2.clone(), create_tool_item(&id2, vec![]));
+
+        let tool3 = create_tool("Tool B", None, vec![]);
+        let id3 = generate_tool_id(&mut name_counts, &items, &tool3);
+        assert_eq!(id3, "tool-b-1");
+    }
+
+    #[test]
+    fn test_topological_order_valid() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec![]));
+        items.insert("b".to_string(), create_tool_item("b", vec!["a"]));
+        items.insert("c".to_string(), create_tool_item("c", vec!["b"]));
+        let order = Tools::topological_order(&items).unwrap();
+        assert_eq!(order, vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_topological_order_cycle() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec!["c"]));
+        items.insert("b".to_string(), create_tool_item("b", vec!["a"]));
+        items.insert("c".to_string(), create_tool_item("c", vec!["b"]));
+        let result = Tools::topological_order(&items);
+        assert!(matches!(result, Err(ToolError::CycleDetected)));
+    }
+
+    #[test]
+    fn test_execution_stages() {
+        let mut items = HashMap::new();
+        items.insert("a".to_string(), create_tool_item("a", vec![]));
+        items.insert("b".to_string(), create_tool_item("b", vec!["a"]));
+        items.insert("c".to_string(), create_tool_item("c", vec![]));
+        items.insert("d".to_string(), create_tool_item("d", vec!["b", "c"]));
+
+        let tools = Tools {
+            root: "/".to_string(),
+            ordered_ids: vec!["a".to_string(), "c".to_string(), "b".to_string(), "d".to_string()],
+            items,
+        };
+
+        let stages = tools.execution_stages();
+        assert_eq!(stages.len(), 3);
+        assert_eq!(stages[0].len(), 2);
+        assert!(stages[0].iter().any(|t| t.id == "a"));
+        assert!(stages[0].iter().any(|t| t.id == "c"));
+        assert_eq!(stages[1].len(), 1);
+        assert_eq!(stages[1][0].id, "b");
+        assert_eq!(stages[2].len(), 1);
+        assert_eq!(stages[2][0].id, "d");
     }
 }

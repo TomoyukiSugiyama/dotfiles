@@ -34,3 +34,29 @@ impl Widget for SelectedTab {
         self.render_tabs(area, buffer);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    #[test]
+    fn test_render_tabs_workflow_selected() {
+        let tab = SelectedTab::Workflow;
+        let mut terminal = Terminal::new(TestBackend::new(50, 3)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(tab, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_render_tabs_dotfiles_selected() {
+        let tab = SelectedTab::Dotfiles;
+        let mut terminal = Terminal::new(TestBackend::new(50, 3)).unwrap();
+        let result = terminal.draw(|frame| frame.render_widget(tab, frame.area()));
+        
+        // Just verify rendering doesn't panic
+        assert!(result.is_ok());
+    }
+}
