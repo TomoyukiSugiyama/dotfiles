@@ -73,8 +73,8 @@ jobs:
           ARCHIVE_PATH="target/universal-apple-darwin/${ARCHIVE_NAME}"
           tar -C target/universal-apple-darwin -czf "$ARCHIVE_PATH" "${PROJECT_NAME}"
           {
-            echo "archive-name=$ARCHIVE_NAME"
-            echo "archive-path=$ARCHIVE_PATH"
+            echo "archive_name=$ARCHIVE_NAME"
+            echo "archive_path=$ARCHIVE_PATH"
           } >> "$GITHUB_OUTPUT"
         id: package
 
@@ -86,14 +86,14 @@ jobs:
           name: ${{ steps.version.outputs.version }}
           body: ${{ github.event.inputs.release_notes }}
           generate_release_notes: ${{ github.event.inputs.release_notes == '' }}
-          files: ${{ steps.package.outputs.archive-path }}
+          files: ${{ steps.package.outputs.archive_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Calculate SHA256
         id: checksum
         run: |
-          FILE="${{ steps.package.outputs.archive-path }}"
+          FILE="${{ steps.package.outputs.archive_path }}"
           SHASUM=$(shasum -a 256 "$FILE" | awk '{print $1}')
           echo "sha256=$SHASUM" >> "$GITHUB_OUTPUT"
 
@@ -109,7 +109,7 @@ jobs:
         run: |
           set -euo pipefail
           FORMULA_FILE="tap-repo/${HOMEBREW_TAP_FORMULA_PATH}"
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/${{ steps.package.outputs.archive-name }}"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/${{ steps.package.outputs.archive_name }}"
           VERSION_LINE="  version \"${{ steps.version.outputs.version }}\""
           URL_LINE="  url \"${DOWNLOAD_URL}\""
           SHA_LINE="  sha256 \"${{ steps.checksum.outputs.sha256 }}\""
@@ -124,10 +124,6 @@ jobs:
           perl -0pi -e 's/^\s*sha256\s+"[^"]+"$/${ENV{SHA_LINE}}/m' "$FORMULA_FILE"
 
           git -C tap-repo status --short
-        env:
-          VERSION_LINE: ${{ format('  version "{0}"', steps.version.outputs.version) }}
-          URL_LINE: ${{ format('  url "https://github.com/{0}/releases/download/v{1}/{2}"', github.repository, steps.version.outputs.version, steps.package.outputs["archive-name"]) }}
-          SHA_LINE: ${{ format('  sha256 "{0}"', steps.checksum.outputs.sha256) }}
 
       - name: Update Homebrew tap
         uses: peter-evans/create-pull-request@v6
