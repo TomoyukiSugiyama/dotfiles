@@ -346,6 +346,9 @@ impl Workflow {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::{self, File};
+    use std::io::Write;
+    use tokio::runtime::Runtime;
 
     #[test]
     fn test_tool_run_result_success() {
@@ -504,5 +507,39 @@ mod tests {
 
         assert_eq!(workflow.view, ViewTab::Log);
         assert!(workflow.pending_scroll_to_bottom);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_run_tool_script_with_space_in_path() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = tempfile::tempdir().unwrap();
+        let script_path = dir.path().join("script with spaces.zsh");
+
+        let mut file = File::create(&script_path).unwrap();
+        writeln!(file, "#!/bin/zsh").unwrap();
+        writeln!(file, "echo space-test").unwrap();
+
+        let mut permissions = fs::metadata(&script_path).unwrap().permissions();
+        permissions.set_mode(0o755);
+        fs::set_permissions(&script_path, permissions).unwrap();
+
+        let (sender, mut receiver) = mpsc::unbounded_channel();
+        let runtime = Runtime::new().unwrap();
+        let result = runtime.block_on(async {
+            Workflow::run_tool_script(
+                "Space Tool".to_string(),
+                script_path.to_string_lossy().into_owned(),
+                sender,
+            )
+            .await
+        });
+
+        assert!(result.is_success());
+
+        let messages: Vec<_> = std::iter::from_fn(|| receiver.try_recv().ok()).collect();
+        assert!(result.is_success());
+        assert!(messages.iter().any(|message| message.contains("space-test")));
     }
 }
