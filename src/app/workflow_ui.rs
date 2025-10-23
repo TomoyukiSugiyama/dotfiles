@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_render_workflow_menu_view() {
-        let mut workflow = Workflow::new_for_test();
+        let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Menu;
         
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn test_render_workflow_log_view() {
-        let mut workflow = Workflow::new_for_test();
+        let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
         
         // Add some log lines for testing
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_snapshot_workflow_menu_view() {
-        let mut workflow = Workflow::new_for_test();
+        let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Menu;
         
         let backend = TestBackend::new(120, 35);
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_snapshot_workflow_log_view() {
-        let mut workflow = Workflow::new_for_test();
+        let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
         
         // Add some log lines for testing
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn test_snapshot_workflow_with_warning() {
-        let mut workflow = Workflow::new_for_test();
+        let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
         workflow.show_reload_warning("Tool dependencies have changed".to_string());
         workflow.log_lines.push_back("Tool execution started\n".to_string());
@@ -185,7 +185,7 @@ mod tests {
 
     #[test]
     fn test_snapshot_workflow_empty_log() {
-        let mut workflow = Workflow::new_for_test();
+        let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
         
         let backend = TestBackend::new(120, 35);
