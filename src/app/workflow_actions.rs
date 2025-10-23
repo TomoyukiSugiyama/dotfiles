@@ -540,6 +540,10 @@ mod tests {
 
         let messages: Vec<_> = std::iter::from_fn(|| receiver.try_recv().ok()).collect();
         assert!(result.is_success());
-        assert!(messages.iter().any(|message| message.contains("space-test")));
+        assert!(
+            messages
+                .iter()
+                .any(|message| message.contains("space-test"))
+        );
     }
 }

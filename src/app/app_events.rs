@@ -109,5 +109,4 @@ mod tests {
         assert!(app.dotfiles.reload_warning.is_none());
         assert!(app.workflow.reload_warning.is_none());
     }
-    
 }
