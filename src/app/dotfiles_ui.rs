@@ -341,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_snapshot_dotfiles_menu_focused() {
-        let mut dotfiles = Dotfiles::new_for_test();
+        let mut dotfiles = Dotfiles::new_with_test_tools();
         dotfiles.view = ViewTab::Menu;  // Menu is focused (yellow border)
         
         let backend = TestBackend::new(120, 30);
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_snapshot_dotfiles_script_focused() {
-        let mut dotfiles = Dotfiles::new_for_test();
+        let mut dotfiles = Dotfiles::new_with_test_tools();
         dotfiles.view = ViewTab::Script;  // Script is focused (yellow border)
         
         let backend = TestBackend::new(120, 30);

@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn test_render_app_workflow_tab() {
-        let mut app = App::new();
+        let mut app = App::new_with_test_tools();
         app.selected_tab = SelectedTab::Workflow;
         
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
@@ -86,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_render_app_dotfiles_tab() {
-        let mut app = App::new();
+        let mut app = App::new_with_test_tools();
         app.selected_tab = SelectedTab::Dotfiles;
         
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
