@@ -59,9 +59,6 @@ impl Tools {
 
     #[cfg(test)]
     pub(crate) fn new_with_test_data() -> Self {
-        use std::collections::HashMap;
-        
-        // Create deterministic test tools based on actual usage
         let mut items = HashMap::new();
         
         // Brew - no dependencies
@@ -151,8 +148,13 @@ impl Tools {
             "zsh".to_string(),
         ];
         
+        let assets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/assets/dotfiles")
+            .to_string_lossy()
+            .into_owned();
+
         Self {
-            root: "~/.dotfiles".to_string(),
+            root: assets_root,
             ordered_ids,
             items,
         }
