@@ -99,8 +99,15 @@ mod tests {
 
         // Test 'r' key for reload (should not crash)
         app.on_key_event(KeyEvent::new(KeyCode::Char('r'), KeyModifiers::NONE));
+        assert!(app.dotfiles.reload_error.is_none());
+        assert!(app.dotfiles.reload_warning.is_none());
+        assert!(app.workflow.reload_warning.is_none());
 
         // Test 'R' key for reload (should not crash)
         app.on_key_event(KeyEvent::new(KeyCode::Char('R'), KeyModifiers::NONE));
+        assert!(app.dotfiles.reload_error.is_none());
+        assert!(app.dotfiles.reload_warning.is_none());
+        assert!(app.workflow.reload_warning.is_none());
     }
+    
 }
