@@ -40,6 +40,24 @@ mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
 
+    fn buffer_to_string(backend: &TestBackend) -> String {
+        let buffer = backend.buffer();
+        let area = buffer.area();
+        let mut result = String::new();
+        
+        for y in 0..area.height {
+            for x in 0..area.width {
+                let cell = buffer.cell((x, y)).expect("valid cell position");
+                result.push_str(cell.symbol());
+            }
+            if y < area.height - 1 {
+                result.push('\n');
+            }
+        }
+        
+        result
+    }
+
     #[test]
     fn test_render_tabs_workflow_selected() {
         let tab = SelectedTab::Workflow;
@@ -58,5 +76,31 @@ mod tests {
         
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_snapshot_tabs_workflow_selected() {
+        let tab = SelectedTab::Workflow;
+        let backend = TestBackend::new(60, 3);
+        let mut terminal = Terminal::new(backend).unwrap();
+        
+        terminal.draw(|frame| frame.render_widget(tab, frame.area())).unwrap();
+        
+        let rendered = buffer_to_string(terminal.backend());
+        
+        insta::assert_snapshot!(rendered);
+    }
+
+    #[test]
+    fn test_snapshot_tabs_dotfiles_selected() {
+        let tab = SelectedTab::Dotfiles;
+        let backend = TestBackend::new(60, 3);
+        let mut terminal = Terminal::new(backend).unwrap();
+        
+        terminal.draw(|frame| frame.render_widget(tab, frame.area())).unwrap();
+        
+        let rendered = buffer_to_string(terminal.backend());
+        
+        insta::assert_snapshot!(rendered);
     }
 }

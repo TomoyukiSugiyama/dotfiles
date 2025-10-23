@@ -277,4 +277,9 @@ mod tests {
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
+
+    // Note: Snapshot tests for dotfiles UI with actual tool lists are unstable
+    // due to non-deterministic HashMap iteration order. These tests are
+    // commented out in favor of basic rendering tests above.
+    // Stable snapshot tests exist for tabs and workflow UI components.
 }
