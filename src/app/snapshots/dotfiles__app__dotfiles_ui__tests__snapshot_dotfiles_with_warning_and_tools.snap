@@ -8,7 +8,7 @@ expression: rendered
 │> Brew (brew)                     ││                                                                                  │
 │  Gcloud (gcloud)                 ││Tool: Brew                                                                        │
 │  Helm (helm)                     ││ID: brew                                                                          │
-│  Krew (krew)                     ││Path: /Users/tomoyuki.sugiyama/Work/GitHub/misc/dotfiles/tests/assets/dotfiles/bre│
+│  Krew (krew)                     ││Path: tests/assets/dotfiles/brew/brew-settings.zsh                                │
 │  Rust (rust)                     ││Order: Stage 1                                                                    │
 │  Zsh (zsh)                       ││                                                                                  │
 │                                  ││┌Dependency Map (* current tool)─────────────────────────────────────────────────┐│

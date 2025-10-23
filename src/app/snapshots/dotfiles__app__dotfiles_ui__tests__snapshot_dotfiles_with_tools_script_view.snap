@@ -6,7 +6,7 @@ expression: rendered
 ┌Preferences───────────────────────┐┌Tool Details──────────────────────────────────────────────────────────────────────┐
 │Tools Settings                    ││Tool: Brew                                                                        │
 │> Brew (brew)                     ││ID: brew                                                                          │
-│  Gcloud (gcloud)                 ││Path: /Users/tomoyuki.sugiyama/Work/GitHub/misc/dotfiles/tests/assets/dotfiles/bre│
+│  Gcloud (gcloud)                 ││Path: tests/assets/dotfiles/brew/brew-settings.zsh                                │
 │  Helm (helm)                     ││Order: Stage 1                                                                    │
 │  Krew (krew)                     ││                                                                                  │
 │  Rust (rust)                     ││┌Dependency Map (* current tool)─────────────────────────────────────────────────┐│

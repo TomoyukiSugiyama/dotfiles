@@ -148,13 +148,8 @@ impl Tools {
             "zsh".to_string(),
         ];
         
-        let assets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/assets/dotfiles")
-            .to_string_lossy()
-            .into_owned();
-
         Self {
-            root: assets_root,
+            root: "tests/assets/dotfiles".to_string(),
             ordered_ids,
             items,
         }
