@@ -38,13 +38,13 @@ impl Widget for SelectedTab {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::{backend::TestBackend, Terminal};
+    use ratatui::{Terminal, backend::TestBackend};
 
     fn buffer_to_string(backend: &TestBackend) -> String {
         let buffer = backend.buffer();
         let area = buffer.area();
         let mut result = String::new();
-        
+
         for y in 0..area.height {
             for x in 0..area.width {
                 let cell = buffer.cell((x, y)).expect("valid cell position");
@@ -54,7 +54,7 @@ mod tests {
                 result.push('\n');
             }
         }
-        
+
         result
     }
 
@@ -63,7 +63,7 @@ mod tests {
         let tab = SelectedTab::Workflow;
         let mut terminal = Terminal::new(TestBackend::new(50, 3)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(tab, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
@@ -73,7 +73,7 @@ mod tests {
         let tab = SelectedTab::Dotfiles;
         let mut terminal = Terminal::new(TestBackend::new(50, 3)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(tab, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
@@ -83,11 +83,13 @@ mod tests {
         let tab = SelectedTab::Workflow;
         let backend = TestBackend::new(60, 3);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(tab, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(tab, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
-        
+
         insta::assert_snapshot!(rendered);
     }
 
@@ -96,11 +98,13 @@ mod tests {
         let tab = SelectedTab::Dotfiles;
         let backend = TestBackend::new(60, 3);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(tab, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(tab, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
-        
+
         insta::assert_snapshot!(rendered);
     }
 }

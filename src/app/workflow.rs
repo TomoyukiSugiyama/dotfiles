@@ -62,7 +62,7 @@ impl Workflow {
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
         let mut menu = Menu::from_iter([("Run Tools".to_string(), Some(MenuItemAction::RunTools))]);
         menu.state.select_first();
-        
+
         Self {
             menu,
             runtime: Runtime::new().expect("failed to start tokio runtime"),

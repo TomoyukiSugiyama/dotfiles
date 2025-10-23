@@ -106,25 +106,25 @@ mod tests {
     #[test]
     fn test_scroll_script() {
         let mut dotfiles = Dotfiles::new();
-        
+
         // Add some script lines
         for i in 0..20 {
             dotfiles.script_lines.push_back(format!("Line {}\n", i));
         }
         dotfiles.view_height = 10;
-        
+
         // Test scroll down
         dotfiles.scroll_script(5);
         assert_eq!(dotfiles.script_scroll, 5);
-        
+
         // Test scroll up
         dotfiles.scroll_script(-2);
         assert_eq!(dotfiles.script_scroll, 3);
-        
+
         // Test scroll to bottom
         dotfiles.scroll_script_to_bottom();
         assert_eq!(dotfiles.script_scroll, 10); // 20 - 10
-        
+
         // Test scroll to top
         dotfiles.scroll_script_to_top();
         assert_eq!(dotfiles.script_scroll, 0);
@@ -135,9 +135,9 @@ mod tests {
         let mut dotfiles = Dotfiles::new();
         dotfiles.script_lines.push_back("Line 1\n".to_string());
         dotfiles.script_scroll = 5;
-        
+
         dotfiles.reset_script_view();
-        
+
         assert_eq!(dotfiles.script_scroll, 0);
         assert!(dotfiles.script_lines.is_empty());
     }
@@ -147,9 +147,9 @@ mod tests {
         let mut dotfiles = Dotfiles::new();
         dotfiles.script_lines.push_back("Line 1\n".to_string());
         dotfiles.script_scroll = 5;
-        
+
         dotfiles.show_reload_error("Test error".to_string());
-        
+
         assert_eq!(dotfiles.reload_error, Some("Test error".to_string()));
         assert_eq!(dotfiles.script_scroll, 0);
         assert!(dotfiles.script_lines.is_empty());
@@ -159,9 +159,9 @@ mod tests {
     fn test_show_reload_warning() {
         let mut dotfiles = Dotfiles::new();
         dotfiles.reload_error = Some("Error".to_string());
-        
+
         dotfiles.show_reload_warning("Warning".to_string());
-        
+
         assert!(dotfiles.reload_error.is_none());
         assert_eq!(dotfiles.reload_warning, Some("Warning".to_string()));
     }
@@ -170,42 +170,56 @@ mod tests {
     fn test_clear_reload_warning() {
         let mut dotfiles = Dotfiles::new();
         dotfiles.reload_warning = Some("Warning".to_string());
-        
+
         dotfiles.clear_reload_warning();
-        
+
         assert!(dotfiles.reload_warning.is_none());
     }
 
     #[test]
     fn test_select_next_tool() {
         let mut dotfiles = Dotfiles::new();
-        
+
         dotfiles.select_next_tool();
-        
+
         // State should have been updated (actual behavior depends on ListState)
         // Just verify no panic occurred
-        assert!(dotfiles.preferences.tools_settings.state.selected().is_some());
+        assert!(
+            dotfiles
+                .preferences
+                .tools_settings
+                .state
+                .selected()
+                .is_some()
+        );
     }
 
     #[test]
     fn test_select_previous_tool() {
         let mut dotfiles = Dotfiles::new();
-        
+
         dotfiles.select_previous_tool();
-        
+
         // State should have been updated (actual behavior depends on ListState)
         // Just verify no panic occurred
-        assert!(dotfiles.preferences.tools_settings.state.selected().is_some());
+        assert!(
+            dotfiles
+                .preferences
+                .tools_settings
+                .state
+                .selected()
+                .is_some()
+        );
     }
 
     #[test]
     fn test_scroll_script_empty_lines() {
         let mut dotfiles = Dotfiles::new();
-        
+
         // Scrolling with empty lines should be a no-op
         dotfiles.scroll_script(5);
         assert_eq!(dotfiles.script_scroll, 0);
-        
+
         dotfiles.scroll_script(-5);
         assert_eq!(dotfiles.script_scroll, 0);
     }
@@ -213,18 +227,21 @@ mod tests {
     #[test]
     fn test_scroll_script_max_boundary() {
         let mut dotfiles = Dotfiles::new();
-        
+
         // Add some script lines
         for i in 0..10 {
             dotfiles.script_lines.push_back(format!("Line {}\n", i));
         }
         dotfiles.view_height = 5;
-        
+
         // Scroll beyond max
         dotfiles.scroll_script(100);
-        let max_scroll = dotfiles.script_lines.len().saturating_sub(dotfiles.view_height) as u16;
+        let max_scroll = dotfiles
+            .script_lines
+            .len()
+            .saturating_sub(dotfiles.view_height) as u16;
         assert_eq!(dotfiles.script_scroll, max_scroll);
-        
+
         // Try scrolling down more - should not exceed max
         let current = dotfiles.script_scroll;
         dotfiles.scroll_script(10);
@@ -234,13 +251,13 @@ mod tests {
     #[test]
     fn test_scroll_script_min_boundary() {
         let mut dotfiles = Dotfiles::new();
-        
+
         // Add some script lines
         for i in 0..10 {
             dotfiles.script_lines.push_back(format!("Line {}\n", i));
         }
         dotfiles.view_height = 5;
-        
+
         // Already at 0, try scrolling up - should stay at 0
         dotfiles.scroll_script(-5);
         assert_eq!(dotfiles.script_scroll, 0);
@@ -249,12 +266,12 @@ mod tests {
     #[test]
     fn test_apply_tools_preserves_selection() {
         use crate::tools::Tools;
-        
+
         let mut dotfiles = Dotfiles::new();
         let tools = Tools::new_empty();
-        
+
         dotfiles.apply_tools(tools);
-        
+
         // Reload errors and warnings should be cleared
         assert!(dotfiles.reload_error.is_none());
         assert!(dotfiles.reload_warning.is_none());

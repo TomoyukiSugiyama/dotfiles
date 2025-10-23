@@ -58,15 +58,15 @@ mod tests {
     #[test]
     fn test_drain_log_messages() {
         let mut workflow = Workflow::new_for_test();
-        
+
         // Send some messages
         workflow.log_sender.send("Line 1\n".to_string()).unwrap();
         workflow.log_sender.send("Line 2\n".to_string()).unwrap();
         workflow.log_sender.send("Line 3\n".to_string()).unwrap();
-        
+
         // Drain messages
         workflow.drain_log_messages();
-        
+
         assert_eq!(workflow.log_lines.len(), 3);
         assert_eq!(workflow.log_lines[0], "Line 1\n");
         assert_eq!(workflow.log_lines[1], "Line 2\n");
@@ -76,14 +76,14 @@ mod tests {
     #[test]
     fn test_drain_log_messages_max_limit() {
         let mut workflow = Workflow::new_for_test();
-        
+
         // Send more than MAX_LOG_LINES messages
         for i in 0..(MAX_LOG_LINES + 10) {
             workflow.log_sender.send(format!("Line {}\n", i)).unwrap();
         }
-        
+
         workflow.drain_log_messages();
-        
+
         // Should not exceed MAX_LOG_LINES
         assert_eq!(workflow.log_lines.len(), MAX_LOG_LINES);
         // First line should be line 10 (0-9 were removed)

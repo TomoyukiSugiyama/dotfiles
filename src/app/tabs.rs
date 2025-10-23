@@ -49,16 +49,16 @@ mod tests {
     #[test]
     fn test_selected_tab_navigation() {
         let mut tab = SelectedTab::Workflow;
-        
+
         tab.select_next_tab();
         assert_eq!(tab, SelectedTab::Dotfiles);
-        
+
         tab.select_next_tab();
         assert_eq!(tab, SelectedTab::Workflow);
-        
+
         tab.select_previous_tab();
         assert_eq!(tab, SelectedTab::Dotfiles);
-        
+
         tab.select_previous_tab();
         assert_eq!(tab, SelectedTab::Workflow);
     }

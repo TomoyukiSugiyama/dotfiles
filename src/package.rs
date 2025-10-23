@@ -900,11 +900,11 @@ mod tests {
         // Safe paths
         assert!(validate_relative_path("test/file.txt").is_ok());
         assert!(validate_relative_path("file.txt").is_ok());
-        
+
         // Unsafe paths with parent directory
         assert!(validate_relative_path("../file.txt").is_err());
         assert!(validate_relative_path("test/../file.txt").is_err());
-        
+
         // Absolute paths
         assert!(validate_relative_path("/etc/passwd").is_err());
     }
@@ -914,7 +914,7 @@ mod tests {
         let data = b"Hello, World!";
         let reader = Cursor::new(data);
         let hash = compute_sha256_reader(reader).unwrap();
-        
+
         // Expected SHA256 hash of "Hello, World!"
         let expected = "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f";
         assert_eq!(hash, expected);
@@ -926,15 +926,15 @@ mod tests {
         let path = Path::new("test");
         let result = finalize_destination(path, ArchiveFormat::TarGz);
         assert!(result.to_string_lossy().ends_with(".tar.gz"));
-        
+
         let result = finalize_destination(path, ArchiveFormat::Zip);
         assert!(result.to_string_lossy().ends_with(".zip"));
-        
+
         // Path with matching extension
         let path = Path::new("myfile.zip");
         let result = finalize_destination(path, ArchiveFormat::Zip);
         assert_eq!(result.to_string_lossy(), "myfile.zip");
-        
+
         // Path with different extension gets replaced
         let path = Path::new("myfile.txt");
         let result = finalize_destination(path, ArchiveFormat::Zip);
@@ -958,22 +958,22 @@ mod tests {
     #[test]
     fn test_check_path() {
         let mut seen = HashSet::new();
-        
+
         // First insertion should succeed
         assert!(check_path(&mut seen, "file1.txt").is_ok());
-        
+
         // Duplicate should fail
         assert!(check_path(&mut seen, "file1.txt").is_err());
-        
+
         // Different path should succeed
         assert!(check_path(&mut seen, "file2.txt").is_ok());
     }
 
     #[test]
     fn test_rewrite_config_root_basic() {
-        use tempfile::NamedTempFile;
         use std::path::PathBuf;
-        
+        use tempfile::NamedTempFile;
+
         let mut temp_file = NamedTempFile::new().unwrap();
         let content = r#"# Config file
 SystemPreferences:
@@ -984,10 +984,10 @@ Preferences:
 "#;
         std::io::Write::write_all(&mut temp_file, content.as_bytes()).unwrap();
         let path = temp_file.path();
-        
+
         let new_root = PathBuf::from("/new/path");
         rewrite_config_root(path, &new_root).unwrap();
-        
+
         let result = fs::read_to_string(path).unwrap();
         assert!(result.contains("Root: /new/path"));
         assert!(!result.contains("Root: /old/path"));
@@ -995,9 +995,9 @@ Preferences:
 
     #[test]
     fn test_rewrite_config_root_with_comments() {
-        use tempfile::NamedTempFile;
         use std::path::PathBuf;
-        
+        use tempfile::NamedTempFile;
+
         let mut temp_file = NamedTempFile::new().unwrap();
         let content = r#"SystemPreferences:
   # This is a comment
@@ -1008,10 +1008,10 @@ Preferences:
 "#;
         std::io::Write::write_all(&mut temp_file, content.as_bytes()).unwrap();
         let path = temp_file.path();
-        
+
         let new_root = PathBuf::from("/new/path");
         rewrite_config_root(path, &new_root).unwrap();
-        
+
         let result = fs::read_to_string(path).unwrap();
         assert!(result.contains("Root: /new/path"));
         assert!(result.contains("# This is a comment"));
@@ -1022,22 +1022,22 @@ Preferences:
     fn test_file_mode_unix() {
         #[cfg(unix)]
         {
-            use tempfile::NamedTempFile;
             use std::os::unix::fs::PermissionsExt;
-            
+            use tempfile::NamedTempFile;
+
             let temp_file = NamedTempFile::new().unwrap();
             let path = temp_file.path();
-            
+
             // Set specific permissions
             let perms = fs::Permissions::from_mode(0o755);
             fs::set_permissions(path, perms).unwrap();
-            
+
             let metadata = fs::metadata(path).unwrap();
             let mode = file_mode(&metadata);
-            
+
             assert_eq!(mode & 0o777, 0o755);
         }
-        
+
         #[cfg(not(unix))]
         {
             let metadata = fs::metadata(".").unwrap();
@@ -1049,12 +1049,12 @@ Preferences:
     #[test]
     fn test_ensure_destination_parent() {
         use tempfile::TempDir;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let nested_path = temp_dir.path().join("nested").join("dir").join("file.txt");
-        
+
         ensure_destination_parent(&nested_path).unwrap();
-        
+
         // Parent directories should be created
         assert!(nested_path.parent().unwrap().exists());
     }
@@ -1063,7 +1063,7 @@ Preferences:
     fn test_relative_path_success() {
         let root = Path::new("/root/path");
         let path = Path::new("/root/path/sub/file.txt");
-        
+
         let result = relative_path(path, root).unwrap();
         assert_eq!(result, PathBuf::from("sub/file.txt"));
     }
@@ -1072,7 +1072,7 @@ Preferences:
     fn test_relative_path_outside_root() {
         let root = Path::new("/root/path");
         let path = Path::new("/other/path/file.txt");
-        
+
         let result = relative_path(path, root);
         assert!(result.is_err());
         assert!(matches!(result, Err(PackageError::PathOutsideRoot { .. })));
@@ -1086,7 +1086,7 @@ Preferences:
             mode: 0o644,
             size: 1024,
         };
-        
+
         assert_eq!(manifest_file.path, "test/file.txt");
         assert_eq!(manifest_file.sha256, "abc123");
         assert_eq!(manifest_file.mode, 0o644);
@@ -1109,7 +1109,7 @@ Preferences:
             },
             related_files: vec![],
         };
-        
+
         assert_eq!(entry.id, "tool1");
         assert_eq!(entry.dependencies.len(), 1);
         assert_eq!(entry.artifact.mode, 0o755);
@@ -1127,24 +1127,22 @@ Preferences:
                 mode: 0o644,
                 size: 100,
             },
-            tools: vec![
-                ManifestToolEntry {
-                    id: "tool1".to_string(),
-                    name: "Tool 1".to_string(),
-                    root: "tool1".to_string(),
-                    file: "tool1.sh".to_string(),
-                    dependencies: vec![],
-                    artifact: ManifestFile {
-                        path: "config.yaml".to_string(), // Duplicate!
-                        sha256: "hash2".to_string(),
-                        mode: 0o755,
-                        size: 200,
-                    },
-                    related_files: vec![],
+            tools: vec![ManifestToolEntry {
+                id: "tool1".to_string(),
+                name: "Tool 1".to_string(),
+                root: "tool1".to_string(),
+                file: "tool1.sh".to_string(),
+                dependencies: vec![],
+                artifact: ManifestFile {
+                    path: "config.yaml".to_string(), // Duplicate!
+                    sha256: "hash2".to_string(),
+                    mode: 0o755,
+                    size: 200,
                 },
-            ],
+                related_files: vec![],
+            }],
         };
-        
+
         let result = validate_manifest_paths(&manifest);
         assert!(result.is_err());
         assert!(matches!(result, Err(PackageError::DuplicatePath { .. })));

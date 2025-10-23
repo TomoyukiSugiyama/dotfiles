@@ -52,7 +52,7 @@ impl Widget for &mut App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::{backend::TestBackend, Terminal};
+    use ratatui::{Terminal, backend::TestBackend};
 
     fn buffer_to_string(backend: &TestBackend) -> String {
         let buffer = backend.buffer();
@@ -76,10 +76,10 @@ mod tests {
     fn test_render_app_workflow_tab() {
         let mut app = App::new_with_test_tools();
         app.selected_tab = SelectedTab::Workflow;
-        
+
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(&mut app, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
@@ -88,10 +88,10 @@ mod tests {
     fn test_render_app_dotfiles_tab() {
         let mut app = App::new_with_test_tools();
         app.selected_tab = SelectedTab::Dotfiles;
-        
+
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(&mut app, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }

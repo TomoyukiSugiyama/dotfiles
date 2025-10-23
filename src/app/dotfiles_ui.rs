@@ -248,13 +248,13 @@ impl Widget for &mut Dotfiles {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::{backend::TestBackend, Terminal};
+    use ratatui::{Terminal, backend::TestBackend};
 
     fn buffer_to_string(backend: &TestBackend) -> String {
         let buffer = backend.buffer();
         let area = buffer.area();
         let mut result = String::new();
-        
+
         for y in 0..area.height {
             for x in 0..area.width {
                 let cell = buffer.cell((x, y)).expect("valid cell position");
@@ -264,7 +264,7 @@ mod tests {
                 result.push('\n');
             }
         }
-        
+
         result
     }
 
@@ -272,10 +272,10 @@ mod tests {
     fn test_render_dotfiles_menu_view() {
         let mut dotfiles = Dotfiles::new();
         dotfiles.view = ViewTab::Menu;
-        
+
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
@@ -284,14 +284,16 @@ mod tests {
     fn test_render_dotfiles_script_view() {
         let mut dotfiles = Dotfiles::new();
         dotfiles.view = ViewTab::Script;
-        
+
         // Add some script lines for testing
         dotfiles.script_lines.push_back("#!/bin/zsh\n".to_string());
-        dotfiles.script_lines.push_back("echo 'Hello World'\n".to_string());
-        
+        dotfiles
+            .script_lines
+            .push_back("echo 'Hello World'\n".to_string());
+
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
@@ -300,12 +302,14 @@ mod tests {
     fn test_snapshot_dotfiles_empty_menu() {
         let mut dotfiles = Dotfiles::new_for_test();
         dotfiles.view = ViewTab::Menu;
-        
+
         let backend = TestBackend::new(120, 30);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -314,12 +318,14 @@ mod tests {
     fn test_snapshot_dotfiles_empty_script() {
         let mut dotfiles = Dotfiles::new_for_test();
         dotfiles.view = ViewTab::Script;
-        
+
         let backend = TestBackend::new(120, 30);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -329,12 +335,14 @@ mod tests {
         let mut dotfiles = Dotfiles::new_for_test();
         dotfiles.view = ViewTab::Menu;
         dotfiles.show_reload_error("Failed to load configuration".to_string());
-        
+
         let backend = TestBackend::new(120, 30);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -342,13 +350,15 @@ mod tests {
     #[test]
     fn test_snapshot_dotfiles_menu_focused() {
         let mut dotfiles = Dotfiles::new_with_test_tools();
-        dotfiles.view = ViewTab::Menu;  // Menu is focused (yellow border)
-        
+        dotfiles.view = ViewTab::Menu; // Menu is focused (yellow border)
+
         let backend = TestBackend::new(120, 30);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -356,13 +366,15 @@ mod tests {
     #[test]
     fn test_snapshot_dotfiles_script_focused() {
         let mut dotfiles = Dotfiles::new_with_test_tools();
-        dotfiles.view = ViewTab::Script;  // Script is focused (yellow border)
-        
+        dotfiles.view = ViewTab::Script; // Script is focused (yellow border)
+
         let backend = TestBackend::new(120, 30);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -373,12 +385,14 @@ mod tests {
         let mut dotfiles = Dotfiles::new_with_test_tools();
         dotfiles.view = ViewTab::Menu;
         // First tool (Brew) is selected by default
-        
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -388,12 +402,14 @@ mod tests {
         let mut dotfiles = Dotfiles::new_with_test_tools();
         dotfiles.view = ViewTab::Script;
         // First tool (Brew) is selected by default
-        
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -402,15 +418,17 @@ mod tests {
     fn test_snapshot_dotfiles_with_last_tool_selected() {
         let mut dotfiles = Dotfiles::new_with_test_tools();
         dotfiles.view = ViewTab::Menu;
-        
+
         // Select last tool (Zsh - has multiple dependencies)
         dotfiles.preferences.tools_settings.state.select(Some(5));
-        
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
@@ -420,12 +438,14 @@ mod tests {
         let mut dotfiles = Dotfiles::new_with_test_tools();
         dotfiles.view = ViewTab::Menu;
         dotfiles.show_reload_warning("Configuration has been reloaded with warnings".to_string());
-        
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut dotfiles, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }

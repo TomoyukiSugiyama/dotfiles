@@ -53,16 +53,16 @@ mod tests {
     fn test_on_key_event_quit() {
         let mut app = App::new();
         assert!(app.running);
-        
+
         // Test 'q' key
         app.on_key_event(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
         assert!(!app.running);
-        
+
         // Reset and test Esc key
         app.running = true;
         app.on_key_event(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE));
         assert!(!app.running);
-        
+
         // Reset and test Ctrl+C
         app.running = true;
         app.on_key_event(KeyEvent::new(KeyCode::Char('c'), KeyModifiers::CONTROL));
@@ -73,11 +73,11 @@ mod tests {
     fn test_on_key_event_tab_navigation() {
         let mut app = App::new();
         let initial_tab = app.selected_tab;
-        
+
         // Test Right key
         app.on_key_event(KeyEvent::new(KeyCode::Right, KeyModifiers::NONE));
         assert_ne!(app.selected_tab, initial_tab);
-        
+
         // Test Left key
         app.on_key_event(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE));
         assert_eq!(app.selected_tab, initial_tab);
@@ -87,7 +87,7 @@ mod tests {
     fn test_on_key_event_ctrl_c() {
         let mut app = App::new();
         assert!(app.running);
-        
+
         // Test Ctrl+C (capital C)
         app.on_key_event(KeyEvent::new(KeyCode::Char('C'), KeyModifiers::CONTROL));
         assert!(!app.running);
@@ -96,10 +96,10 @@ mod tests {
     #[test]
     fn test_on_key_event_reload() {
         let mut app = App::new();
-        
+
         // Test 'r' key for reload (should not crash)
         app.on_key_event(KeyEvent::new(KeyCode::Char('r'), KeyModifiers::NONE));
-        
+
         // Test 'R' key for reload (should not crash)
         app.on_key_event(KeyEvent::new(KeyCode::Char('R'), KeyModifiers::NONE));
     }

@@ -82,13 +82,13 @@ impl Widget for &mut Workflow {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::{backend::TestBackend, Terminal};
+    use ratatui::{Terminal, backend::TestBackend};
 
     fn buffer_to_string(backend: &TestBackend) -> String {
         let buffer = backend.buffer();
         let area = buffer.area();
         let mut result = String::new();
-        
+
         for y in 0..area.height {
             for x in 0..area.width {
                 let cell = buffer.cell((x, y)).expect("valid cell position");
@@ -98,7 +98,7 @@ mod tests {
                 result.push('\n');
             }
         }
-        
+
         result
     }
 
@@ -106,10 +106,10 @@ mod tests {
     fn test_render_workflow_menu_view() {
         let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Menu;
-        
+
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
@@ -118,15 +118,21 @@ mod tests {
     fn test_render_workflow_log_view() {
         let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
-        
+
         // Add some log lines for testing
-        workflow.log_lines.push_back("Starting workflow...\n".to_string());
-        workflow.log_lines.push_back("Running tools...\n".to_string());
-        workflow.log_lines.push_back("Completed successfully.\n".to_string());
-        
+        workflow
+            .log_lines
+            .push_back("Starting workflow...\n".to_string());
+        workflow
+            .log_lines
+            .push_back("Running tools...\n".to_string());
+        workflow
+            .log_lines
+            .push_back("Completed successfully.\n".to_string());
+
         let mut terminal = Terminal::new(TestBackend::new(100, 30)).unwrap();
         let result = terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area()));
-        
+
         // Just verify rendering doesn't panic
         assert!(result.is_ok());
     }
@@ -135,14 +141,16 @@ mod tests {
     fn test_snapshot_workflow_menu_view() {
         let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Menu;
-        
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut workflow, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
-        
+
         insta::assert_snapshot!(rendered);
     }
 
@@ -150,19 +158,27 @@ mod tests {
     fn test_snapshot_workflow_log_view() {
         let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
-        
+
         // Add some log lines for testing
-        workflow.log_lines.push_back("Starting workflow...\n".to_string());
-        workflow.log_lines.push_back("Running tools...\n".to_string());
-        workflow.log_lines.push_back("Completed successfully.\n".to_string());
-        
+        workflow
+            .log_lines
+            .push_back("Starting workflow...\n".to_string());
+        workflow
+            .log_lines
+            .push_back("Running tools...\n".to_string());
+        workflow
+            .log_lines
+            .push_back("Completed successfully.\n".to_string());
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut workflow, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
-        
+
         insta::assert_snapshot!(rendered);
     }
 
@@ -171,15 +187,19 @@ mod tests {
         let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
         workflow.show_reload_warning("Tool dependencies have changed".to_string());
-        workflow.log_lines.push_back("Tool execution started\n".to_string());
-        
+        workflow
+            .log_lines
+            .push_back("Tool execution started\n".to_string());
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut workflow, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
-        
+
         insta::assert_snapshot!(rendered);
     }
 
@@ -187,14 +207,16 @@ mod tests {
     fn test_snapshot_workflow_empty_log() {
         let mut workflow = Workflow::new_with_test_tools();
         workflow.view = ViewTab::Log;
-        
+
         let backend = TestBackend::new(120, 35);
         let mut terminal = Terminal::new(backend).unwrap();
-        
-        terminal.draw(|frame| frame.render_widget(&mut workflow, frame.area())).unwrap();
-        
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut workflow, frame.area()))
+            .unwrap();
+
         let rendered = buffer_to_string(terminal.backend());
-        
+
         insta::assert_snapshot!(rendered);
     }
 }

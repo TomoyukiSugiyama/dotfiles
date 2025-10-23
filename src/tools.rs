@@ -60,7 +60,7 @@ impl Tools {
     #[cfg(test)]
     pub(crate) fn new_with_test_data() -> Self {
         let mut items = HashMap::new();
-        
+
         // Brew - no dependencies
         items.insert(
             "brew".to_string(),
@@ -72,7 +72,7 @@ impl Tools {
                 dependencies: vec![],
             },
         );
-        
+
         // Gcloud - depends on brew
         items.insert(
             "gcloud".to_string(),
@@ -84,7 +84,7 @@ impl Tools {
                 dependencies: vec!["brew".to_string()],
             },
         );
-        
+
         // Helm - depends on brew
         items.insert(
             "helm".to_string(),
@@ -96,7 +96,7 @@ impl Tools {
                 dependencies: vec!["brew".to_string()],
             },
         );
-        
+
         // Krew - depends on brew
         items.insert(
             "krew".to_string(),
@@ -108,7 +108,7 @@ impl Tools {
                 dependencies: vec!["brew".to_string()],
             },
         );
-        
+
         // Rust - depends on brew
         items.insert(
             "rust".to_string(),
@@ -120,7 +120,7 @@ impl Tools {
                 dependencies: vec!["brew".to_string()],
             },
         );
-        
+
         // Zsh - depends on gcloud, helm, krew, rust
         items.insert(
             "zsh".to_string(),
@@ -137,7 +137,7 @@ impl Tools {
                 ],
             },
         );
-        
+
         // Deterministic ordering: topological sort
         let ordered_ids = vec![
             "brew".to_string(),
@@ -147,7 +147,7 @@ impl Tools {
             "rust".to_string(),
             "zsh".to_string(),
         ];
-        
+
         Self {
             root: "tests/assets/dotfiles".to_string(),
             ordered_ids,
@@ -645,7 +645,12 @@ mod tests {
 
         let tools = Tools {
             root: "/".to_string(),
-            ordered_ids: vec!["a".to_string(), "c".to_string(), "b".to_string(), "d".to_string()],
+            ordered_ids: vec![
+                "a".to_string(),
+                "c".to_string(),
+                "b".to_string(),
+                "d".to_string(),
+            ],
             items,
         };
 
@@ -665,11 +670,11 @@ mod tests {
         let tool = create_tool("SelfDep", Some("self-dep"), vec!["self-dep"]);
         let mut name_counts = HashMap::new();
         let items = HashMap::new();
-        
+
         // Directly test generate_tool_id and self-dependency check logic
         let id = generate_tool_id(&mut name_counts, &items, &tool);
         assert_eq!(id, "self-dep");
-        
+
         // Verify that self dependencies are in the tool
         assert!(tool.dependencies().contains(&id));
     }
@@ -678,12 +683,12 @@ mod tests {
     fn test_missing_dependency_strict_mode() {
         let mut items = HashMap::new();
         items.insert("a".to_string(), create_tool_item("a", vec!["missing"]));
-        
+
         let dependency_map: HashMap<String, Vec<String>> = items
             .iter()
             .map(|(id, item)| (id.clone(), item.dependencies.clone()))
             .collect();
-        
+
         let result = Tools::validate_dependencies(&items, &dependency_map);
         assert!(matches!(result, Err(ToolError::MissingDependency { .. })));
     }
@@ -702,7 +707,7 @@ mod tests {
         // "missing" should be removed from dependencies
         assert_eq!(items.get("a").unwrap().dependencies.len(), 1);
         assert_eq!(items.get("a").unwrap().dependencies[0], "existing");
-        
+
         // Should have a warning about missing dependency
         assert_eq!(warnings.len(), 1);
         assert!(warnings[0].contains("missing"));
@@ -714,7 +719,7 @@ mod tests {
         items.insert("a".to_string(), create_tool_item("a", vec![]));
         items.insert("b".to_string(), create_tool_item("b", vec!["a"]));
         items.insert("c".to_string(), create_tool_item("c", vec!["b"]));
-        
+
         let tools = Tools {
             root: "/".to_string(),
             ordered_ids: vec!["a".to_string(), "b".to_string(), "c".to_string()],

@@ -117,6 +117,13 @@ mod tests {
         assert_eq!(dotfiles.view_height, 0);
         assert!(dotfiles.reload_error.is_none());
         assert!(dotfiles.reload_warning.is_none());
-        assert!(dotfiles.preferences.tools_settings.state.selected().is_some());
+        assert!(
+            dotfiles
+                .preferences
+                .tools_settings
+                .state
+                .selected()
+                .is_some()
+        );
     }
 }

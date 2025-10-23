@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn test_menu_select_last() {
         let mut menu = create_test_menu();
-        
+
         menu.select_last();
         // ListState::select_last() behavior depends on the number of items
         // Since we have 3 items, it should select the last one
@@ -102,10 +102,13 @@ mod tests {
             ("Item 1".to_string(), Some(MenuItemAction::RunTools)),
             ("Item 2".to_string(), None),
         ]);
-        
+
         assert_eq!(menu.items.len(), 2);
         assert_eq!(menu.items[0].title, "Item 1");
-        assert!(matches!(menu.items[0].action, Some(MenuItemAction::RunTools)));
+        assert!(matches!(
+            menu.items[0].action,
+            Some(MenuItemAction::RunTools)
+        ));
         assert_eq!(menu.items[1].title, "Item 2");
         assert!(menu.items[1].action.is_none());
     }
