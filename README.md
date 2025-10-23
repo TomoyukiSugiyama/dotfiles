@@ -136,6 +136,23 @@ cargo clippy --all-targets --all-features
 cargo test
 ```
 
+### UI Snapshot Tests
+
+The TUI widgets (tabs, dotfiles pane, workflow pane, and the combined app view)
+are covered by snapshot tests using [`insta`](https://insta.rs). Running
+`cargo test` renders each widget with deterministic fixture data from
+`tests/assets/dotfiles` and compares the buffers against the committed snapshots in
+`src/app/snapshots/`.
+
+When a snapshot assertion fails:
+
+1. Inspect the change with `cargo insta review` (or `cargo insta test --review`).
+2. Accept the update if the output is correct; only the `.snap` files should be
+   committed—temporary `.snap.new` files are ignored via `.gitignore`.
+
+The fixture scripts keep the tests stable even when your real `~/.dotfiles`
+content evolves.
+
 Run `cargo run` without `--release` for faster feedback during iterative work. You can also invoke the CLI directly with `cargo run -- export …` or `cargo run -- install …` to test the packaging flows.
 
 ## License
