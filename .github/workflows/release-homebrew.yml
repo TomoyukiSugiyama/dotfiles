@@ -80,8 +80,6 @@ jobs:
 
       - name: Create GitHub Release
         id: create_release
-        env:
-          NOTES_FALLBACK: "Automated release for dotfiles v${{ steps.version.outputs.version }}"
         run: |
           set -euo pipefail
           BODY_INPUT="${{ github.event.inputs.release_notes }}"
@@ -97,6 +95,7 @@ jobs:
             --title "${{ steps.version.outputs.version }}" \
             --notes "$BODY_TEXT"
         env:
+          NOTES_FALLBACK: "Automated release for dotfiles v${{ steps.version.outputs.version }}"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Calculate SHA256
