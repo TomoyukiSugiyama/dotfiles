@@ -40,6 +40,11 @@ impl Workflow {
         let (log_sender, log_receiver) = mpsc::unbounded_channel();
         let mut menu = Menu::from_iter([("Run Tools".to_string(), Some(MenuItemAction::RunTools))]);
         menu.state.select_first();
+        let (tools, load_error) = match Tools::new() {
+            Ok(tools) => (tools, None),
+            Err(error) => (Tools::default(), Some(error.to_string())),
+        };
+
         Self {
             menu,
             runtime: Runtime::new().expect("failed to start tokio runtime"),
@@ -50,10 +55,8 @@ impl Workflow {
             view_height: 0,
             pending_scroll_to_bottom: false,
             view: ViewTab::Menu,
-            tools: Tools::new().unwrap_or_else(|error| {
-                panic!("Failed to build tools: {:?}", error);
-            }),
-            reload_warning: None,
+            tools,
+            reload_warning: load_error,
         }
     }
 
@@ -103,6 +106,35 @@ impl Workflow {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use std::path::Path;
+    use tempfile::tempdir;
+
+    struct HomeEnvGuard {
+        original: Option<String>,
+    }
+
+    impl HomeEnvGuard {
+        fn set(path: &Path) -> Self {
+            let original = std::env::var("HOME").ok();
+            unsafe {
+                std::env::set_var("HOME", path);
+            }
+            Self { original }
+        }
+    }
+
+    impl Drop for HomeEnvGuard {
+        fn drop(&mut self) {
+            unsafe {
+                if let Some(ref value) = self.original {
+                    std::env::set_var("HOME", value);
+                } else {
+                    std::env::remove_var("HOME");
+                }
+            }
+        }
+    }
 
     #[test]
     fn test_view_tab_next() {
@@ -119,5 +151,21 @@ mod tests {
         assert!(!workflow.pending_scroll_to_bottom);
         assert!(workflow.reload_warning.is_none());
         assert!(workflow.menu.state.selected().is_some());
+    }
+
+    #[test]
+    fn test_workflow_new_with_invalid_config_sets_reload_warning() {
+        let dir = tempdir().unwrap();
+        let dotfiles_dir = dir.path().join(".dotfiles");
+        fs::create_dir_all(&dotfiles_dir).unwrap();
+        fs::write(dotfiles_dir.join("config.yaml"), "invalid: [").unwrap();
+        let _home_guard = HomeEnvGuard::set(dir.path());
+        let workflow = Workflow::new();
+
+        let warning = workflow
+            .reload_warning
+            .expect("expected reload_warning to contain failure message");
+        assert!(warning.contains("Failed to load config"));
+        assert_eq!(workflow.tools.iter().count(), 0);
     }
 }

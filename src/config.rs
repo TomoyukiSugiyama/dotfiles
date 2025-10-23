@@ -74,7 +74,7 @@ impl Config {
         let home = env::var("HOME").expect("HOME environment variable is not set");
         let config_dir = PathBuf::from(home).join(".dotfiles");
         if !config_dir.exists() {
-            fs::create_dir_all(&config_dir).expect("Failed to create config directory");
+            fs::create_dir_all(&config_dir)?;
         }
         let config_file = config_dir.join("config.yaml");
         if !config_file.exists() {

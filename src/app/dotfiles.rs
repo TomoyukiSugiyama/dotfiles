@@ -38,11 +38,14 @@ impl ViewTab {
 
 impl Dotfiles {
     pub(crate) fn new() -> Self {
+        let (tools, load_error) = match Tools::new() {
+            Ok(tools) => (tools, None),
+            Err(error) => (Tools::default(), Some(error.to_string())),
+        };
+
         let mut tools_settings = ToolsSettings {
             state: ListState::default(),
-            tools: Tools::new().unwrap_or_else(|error| {
-                panic!("Failed to build tools: {:?}", error);
-            }),
+            tools,
         };
         tools_settings.state.select_first();
 
@@ -53,7 +56,7 @@ impl Dotfiles {
             script_lines: VecDeque::new(),
             script_scroll: 0,
             view_height: 0,
-            reload_error: None,
+            reload_error: load_error,
             reload_warning: None,
         }
     }
@@ -102,6 +105,35 @@ impl Dotfiles {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use std::path::Path;
+    use tempfile::tempdir;
+
+    struct HomeEnvGuard {
+        original: Option<String>,
+    }
+
+    impl HomeEnvGuard {
+        fn set(path: &Path) -> Self {
+            let original = std::env::var("HOME").ok();
+            unsafe {
+                std::env::set_var("HOME", path);
+            }
+            Self { original }
+        }
+    }
+
+    impl Drop for HomeEnvGuard {
+        fn drop(&mut self) {
+            unsafe {
+                if let Some(ref value) = self.original {
+                    std::env::set_var("HOME", value);
+                } else {
+                    std::env::remove_var("HOME");
+                }
+            }
+        }
+    }
 
     #[test]
     fn test_view_tab_next() {
@@ -115,6 +147,7 @@ mod tests {
         assert_eq!(dotfiles.view, ViewTab::Menu);
         assert_eq!(dotfiles.script_scroll, 0);
         assert_eq!(dotfiles.view_height, 0);
+        // On startup we should not surface a reload error (default config is created automatically)
         assert!(dotfiles.reload_error.is_none());
         assert!(dotfiles.reload_warning.is_none());
         assert!(
@@ -125,5 +158,22 @@ mod tests {
                 .selected()
                 .is_some()
         );
+    }
+
+    #[test]
+    fn test_dotfiles_new_with_invalid_config_sets_reload_error() {
+        let dir = tempdir().unwrap();
+        let dotfiles_dir = dir.path().join(".dotfiles");
+        fs::create_dir_all(&dotfiles_dir).unwrap();
+        fs::write(dotfiles_dir.join("config.yaml"), "invalid: [").unwrap();
+        let _home_guard = HomeEnvGuard::set(dir.path());
+
+        let dotfiles = Dotfiles::new();
+
+        let error = dotfiles
+            .reload_error
+            .expect("expected reload_error to contain failure message");
+        assert!(error.contains("Failed to load config"));
+        assert_eq!(dotfiles.preferences.tools_settings.tools.iter().count(), 0);
     }
 }

@@ -11,6 +11,16 @@ pub(crate) struct Tools {
     items: HashMap<String, ToolItem>,
 }
 
+impl Default for Tools {
+    fn default() -> Self {
+        Self {
+            root: "~/.dotfiles".to_string(),
+            ordered_ids: Vec::new(),
+            items: HashMap::new(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub(crate) struct ToolItem {
     pub id: String,
@@ -52,7 +62,7 @@ impl Tools {
     pub(crate) fn new_empty() -> Self {
         Self {
             root: "~/.dotfiles".to_string(),
-            ordered_ids: vec![],
+            ordered_ids: Vec::new(),
             items: HashMap::new(),
         }
     }
