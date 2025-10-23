@@ -1,0 +1,40 @@
+---
+source: src/app/dotfiles_ui.rs
+assertion_line: 430
+expression: rendered
+---
+┌Preferences───────────────────────┐┌Tool Details──────────────────────────────────────────────────────────────────────┐
+│Tools Settings                    ││Configuration has been reloaded with warnings                                     │
+│> Brew (brew)                     ││                                                                                  │
+│  Gcloud (gcloud)                 ││Tool: Brew                                                                        │
+│  Helm (helm)                     ││ID: brew                                                                          │
+│  Krew (krew)                     ││Path: /Users/tomoyuki.sugiyama/Work/GitHub/misc/dotfiles/tests/assets/dotfiles/bre│
+│  Rust (rust)                     ││Order: Stage 1                                                                    │
+│  Zsh (zsh)                       ││                                                                                  │
+│                                  ││┌Dependency Map (* current tool)─────────────────────────────────────────────────┐│
+│                                  │││* Brew (brew)                                                                   ││
+│                                  │││|-- - Gcloud (gcloud)                                                           ││
+│                                  │││|   `-- - Zsh (zsh)                                                             ││
+│                                  │││|-- - Helm (helm)                                                               ││
+│                                  │││|   `-- - Zsh (zsh) (repeat)                                                    ││
+│                                  │││|-- - Krew (krew)                                                               ││
+│                                  │││|   `-- - Zsh (zsh) (repeat)                                                    ││
+│                                  │││`-- - Rust (rust)                                                               ││
+│                                  │││    `-- - Zsh (zsh) (repeat)                                                    ││
+│                                  ││└────────────────────────────────────────────────────────────────────────────────┘│
+│                                  ││┌Script──────────────────────────────────────────────────────────────────────────┐│
+│                                  │││  #!/usr/bin/env zsh                                                            ││
+│                                  │││  echo "brew script"                                                            ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  │││                                                                                ││
+│                                  ││└────────────────────────────────────────────────────────────────────────────────┘│
+└──────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────┘

@@ -1,0 +1,6 @@
+---
+source: src/app/tabs_ui.rs
+assertion_line: 104
+expression: rendered
+---
+   Dotfiles   │   Workflow
