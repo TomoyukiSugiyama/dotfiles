@@ -366,4 +366,67 @@ mod tests {
         let rendered = buffer_to_string(terminal.backend());
         insta::assert_snapshot!(rendered);
     }
+
+    // Tests with actual tool data (deterministic)
+    #[test]
+    fn test_snapshot_dotfiles_with_tools_menu() {
+        let mut dotfiles = Dotfiles::new_with_test_tools();
+        dotfiles.view = ViewTab::Menu;
+        // First tool (Brew) is selected by default
+        
+        let backend = TestBackend::new(120, 35);
+        let mut terminal = Terminal::new(backend).unwrap();
+        
+        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
+        
+        let rendered = buffer_to_string(terminal.backend());
+        insta::assert_snapshot!(rendered);
+    }
+
+    #[test]
+    fn test_snapshot_dotfiles_with_tools_script_view() {
+        let mut dotfiles = Dotfiles::new_with_test_tools();
+        dotfiles.view = ViewTab::Script;
+        // First tool (Brew) is selected by default
+        
+        let backend = TestBackend::new(120, 35);
+        let mut terminal = Terminal::new(backend).unwrap();
+        
+        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
+        
+        let rendered = buffer_to_string(terminal.backend());
+        insta::assert_snapshot!(rendered);
+    }
+
+    #[test]
+    fn test_snapshot_dotfiles_with_last_tool_selected() {
+        let mut dotfiles = Dotfiles::new_with_test_tools();
+        dotfiles.view = ViewTab::Menu;
+        
+        // Select last tool (Zsh - has multiple dependencies)
+        dotfiles.preferences.tools_settings.state.select(Some(5));
+        
+        let backend = TestBackend::new(120, 35);
+        let mut terminal = Terminal::new(backend).unwrap();
+        
+        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
+        
+        let rendered = buffer_to_string(terminal.backend());
+        insta::assert_snapshot!(rendered);
+    }
+
+    #[test]
+    fn test_snapshot_dotfiles_with_warning_and_tools() {
+        let mut dotfiles = Dotfiles::new_with_test_tools();
+        dotfiles.view = ViewTab::Menu;
+        dotfiles.show_reload_warning("Configuration has been reloaded with warnings".to_string());
+        
+        let backend = TestBackend::new(120, 35);
+        let mut terminal = Terminal::new(backend).unwrap();
+        
+        terminal.draw(|frame| frame.render_widget(&mut dotfiles, frame.area())).unwrap();
+        
+        let rendered = buffer_to_string(terminal.backend());
+        insta::assert_snapshot!(rendered);
+    }
 }

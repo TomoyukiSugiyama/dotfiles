@@ -57,6 +57,107 @@ impl Tools {
         }
     }
 
+    #[cfg(test)]
+    pub(crate) fn new_with_test_data() -> Self {
+        use std::collections::HashMap;
+        
+        // Create deterministic test tools based on actual usage
+        let mut items = HashMap::new();
+        
+        // Brew - no dependencies
+        items.insert(
+            "brew".to_string(),
+            ToolItem {
+                id: "brew".to_string(),
+                name: "Brew".to_string(),
+                root: "brew".to_string(),
+                file: "brew-settings.zsh".to_string(),
+                dependencies: vec![],
+            },
+        );
+        
+        // Gcloud - depends on brew
+        items.insert(
+            "gcloud".to_string(),
+            ToolItem {
+                id: "gcloud".to_string(),
+                name: "Gcloud".to_string(),
+                root: "gcloud".to_string(),
+                file: "gcloud-settings.zsh".to_string(),
+                dependencies: vec!["brew".to_string()],
+            },
+        );
+        
+        // Helm - depends on brew
+        items.insert(
+            "helm".to_string(),
+            ToolItem {
+                id: "helm".to_string(),
+                name: "Helm".to_string(),
+                root: "helm".to_string(),
+                file: "helm-settings.zsh".to_string(),
+                dependencies: vec!["brew".to_string()],
+            },
+        );
+        
+        // Krew - depends on brew
+        items.insert(
+            "krew".to_string(),
+            ToolItem {
+                id: "krew".to_string(),
+                name: "Krew".to_string(),
+                root: "krew".to_string(),
+                file: "krew-settings.zsh".to_string(),
+                dependencies: vec!["brew".to_string()],
+            },
+        );
+        
+        // Rust - depends on brew
+        items.insert(
+            "rust".to_string(),
+            ToolItem {
+                id: "rust".to_string(),
+                name: "Rust".to_string(),
+                root: "rust".to_string(),
+                file: "rust-settings.zsh".to_string(),
+                dependencies: vec!["brew".to_string()],
+            },
+        );
+        
+        // Zsh - depends on gcloud, helm, krew, rust
+        items.insert(
+            "zsh".to_string(),
+            ToolItem {
+                id: "zsh".to_string(),
+                name: "Zsh".to_string(),
+                root: "zsh".to_string(),
+                file: "zsh-settings.zsh".to_string(),
+                dependencies: vec![
+                    "gcloud".to_string(),
+                    "helm".to_string(),
+                    "krew".to_string(),
+                    "rust".to_string(),
+                ],
+            },
+        );
+        
+        // Deterministic ordering: topological sort
+        let ordered_ids = vec![
+            "brew".to_string(),
+            "gcloud".to_string(),
+            "helm".to_string(),
+            "krew".to_string(),
+            "rust".to_string(),
+            "zsh".to_string(),
+        ];
+        
+        Self {
+            root: "~/.dotfiles".to_string(),
+            ordered_ids,
+            items,
+        }
+    }
+
     fn load(strict: bool) -> Result<(Self, Vec<String>), ToolError> {
         let config = Self::load_config()?;
         let root = config.root().to_string();

@@ -77,6 +77,26 @@ impl Dotfiles {
             reload_warning: None,
         }
     }
+
+    #[cfg(test)]
+    pub(crate) fn new_with_test_tools() -> Self {
+        let mut tools_settings = ToolsSettings {
+            state: ListState::default(),
+            tools: Tools::new_with_test_data(),
+        };
+        tools_settings.state.select_first();
+
+        let preferences = Preferences { tools_settings };
+        Self {
+            preferences,
+            view: ViewTab::Menu,
+            script_lines: VecDeque::new(),
+            script_scroll: 0,
+            view_height: 0,
+            reload_error: None,
+            reload_warning: None,
+        }
+    }
 }
 
 #[cfg(test)]
