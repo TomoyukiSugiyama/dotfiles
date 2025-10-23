@@ -335,7 +335,7 @@ impl Workflow {
 
     fn spawn_tool_child(file: &str) -> std::io::Result<tokio::process::Child> {
         TokioCommand::new("zsh")
-            .arg("-c")
+            .arg("--")
             .arg(file)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
