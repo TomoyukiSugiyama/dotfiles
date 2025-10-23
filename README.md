@@ -27,7 +27,7 @@
 
 ```sh
 brew tap TomoyukiSugiyama/homebrew-tap
-brew "dotfiles"
+brew install "dotfiles"
 ```
 
 To upgrade later, run `brew upgrade dotfiles`.
