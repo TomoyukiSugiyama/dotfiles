@@ -54,6 +54,24 @@ mod tests {
     use super::*;
     use ratatui::{backend::TestBackend, Terminal};
 
+    fn buffer_to_string(backend: &TestBackend) -> String {
+        let buffer = backend.buffer();
+        let area = buffer.area();
+        let mut result = String::new();
+
+        for y in 0..area.height {
+            for x in 0..area.width {
+                let cell = buffer.cell((x, y)).expect("valid cell position");
+                result.push_str(cell.symbol());
+            }
+            if y < area.height - 1 {
+                result.push('\n');
+            }
+        }
+
+        result
+    }
+
     #[test]
     fn test_render_app_workflow_tab() {
         let mut app = App::new();
@@ -78,8 +96,35 @@ mod tests {
         assert!(result.is_ok());
     }
 
-    // Note: Snapshot tests for app UI with actual tool lists are unstable
-    // due to non-deterministic HashMap iteration order. These tests are
-    // commented out in favor of basic rendering tests above.
-    // Stable snapshot tests exist for tabs and workflow UI components.
+    #[test]
+    fn test_snapshot_app_workflow_tab_with_tools() {
+        let mut app = App::new_with_test_tools();
+        app.selected_tab = SelectedTab::Workflow;
+
+        let backend = TestBackend::new(120, 40);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut app, frame.area()))
+            .unwrap();
+
+        let rendered = buffer_to_string(terminal.backend());
+        insta::assert_snapshot!(rendered);
+    }
+
+    #[test]
+    fn test_snapshot_app_dotfiles_tab_with_tools() {
+        let mut app = App::new_with_test_tools();
+        app.selected_tab = SelectedTab::Dotfiles;
+
+        let backend = TestBackend::new(120, 40);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        terminal
+            .draw(|frame| frame.render_widget(&mut app, frame.area()))
+            .unwrap();
+
+        let rendered = buffer_to_string(terminal.backend());
+        insta::assert_snapshot!(rendered);
+    }
 }

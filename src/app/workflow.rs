@@ -77,6 +77,27 @@ impl Workflow {
             reload_warning: None,
         }
     }
+
+    #[cfg(test)]
+    pub(crate) fn new_with_test_tools() -> Self {
+        let (log_sender, log_receiver) = mpsc::unbounded_channel();
+        let mut menu = Menu::from_iter([("Run Tools".to_string(), Some(MenuItemAction::RunTools))]);
+        menu.state.select_first();
+
+        Self {
+            menu,
+            runtime: Runtime::new().expect("failed to start tokio runtime"),
+            log_sender,
+            log_receiver,
+            log_lines: VecDeque::new(),
+            log_scroll: 0,
+            view_height: 0,
+            pending_scroll_to_bottom: false,
+            view: ViewTab::Menu,
+            tools: Tools::new_with_test_data(),
+            reload_warning: None,
+        }
+    }
 }
 
 #[cfg(test)]

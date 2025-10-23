@@ -39,6 +39,16 @@ impl App {
         }
     }
 
+    #[cfg(test)]
+    pub(crate) fn new_with_test_tools() -> Self {
+        Self {
+            running: true,
+            workflow: Workflow::new_with_test_tools(),
+            dotfiles: Dotfiles::new_with_test_tools(),
+            selected_tab: SelectedTab::new(),
+        }
+    }
+
     /// Run the application's main loop.
     pub(crate) fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         self.running = true;
