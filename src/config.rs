@@ -190,6 +190,11 @@ pub(crate) fn expand_home_path(path: &str) -> PathBuf {
 /// Supports `${VAR}`, `$VAR`, and other shell expansion patterns.
 /// If expansion fails, returns the original input unchanged.
 fn expand_env_vars(input: &str) -> String {
+    // Skip shell invocation if there's no $ character (no env vars to expand)
+    if !input.contains('$') {
+        return input.to_string();
+    }
+
     use std::process::Command;
 
     // Use shell to expand environment variables
