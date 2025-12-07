@@ -198,12 +198,13 @@ pub fn export_archive(options: &ExportOptions) -> Result<PathBuf, PackageError> 
     let manifest = Manifest {
         version: MANIFEST_VERSION,
         generated_at: Utc::now().to_rfc3339(),
-        original_root: expanded_root.to_string_lossy().into_owned(),
+        original_root: tools.root().to_string(),
         config: config_manifest,
         tools: manifest_tools,
     };
 
     let package_path = finalize_destination(&options.destination, options.format);
+    ensure_destination_parent(&package_path)?;
 
     match options.format {
         ArchiveFormat::TarGz => create_tar_gz(&package_path, &manifest, &expanded_root)?,
@@ -299,7 +300,11 @@ fn finalize_destination(candidate: &Path, format: ArchiveFormat) -> PathBuf {
 
     let mut final_path = candidate.to_path_buf();
 
-    if final_path.is_dir() {
+    // Treat as directory if it already exists as a directory OR has no extension
+    let is_directory = final_path.is_dir()
+        || final_path.extension().is_none() && !final_path.to_string_lossy().ends_with('.');
+
+    if is_directory {
         let file_name = default_archive_name(format.extension());
         final_path.push(file_name.file_name().unwrap());
         return final_path;
@@ -312,6 +317,7 @@ fn finalize_destination(candidate: &Path, format: ArchiveFormat) -> PathBuf {
             final_path
         }
         None => {
+            // This branch is now unreachable since no-extension paths are treated as directories
             let mut os_string = final_path.into_os_string();
             os_string.push(format!(".{ext}", ext = format.extension()));
             PathBuf::from(os_string)
@@ -922,12 +928,14 @@ mod tests {
 
     #[test]
     fn test_finalize_destination() {
-        // Path without extension
-        let path = Path::new("test");
+        // Path without extension is treated as a directory
+        let path = Path::new("backup");
         let result = finalize_destination(path, ArchiveFormat::TarGz);
+        assert!(result.to_string_lossy().starts_with("backup/"));
         assert!(result.to_string_lossy().ends_with(".tar.gz"));
 
         let result = finalize_destination(path, ArchiveFormat::Zip);
+        assert!(result.to_string_lossy().starts_with("backup/"));
         assert!(result.to_string_lossy().ends_with(".zip"));
 
         // Path with matching extension

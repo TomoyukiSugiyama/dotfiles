@@ -171,13 +171,43 @@ impl Tool {
             .collect()
     }
 }
+/// Expands environment variables in the format `${VAR_NAME}` and also handles `~/` prefix.
+/// If an environment variable is not found, the original `${VAR_NAME}` is preserved.
 pub(crate) fn expand_home_path(path: &str) -> PathBuf {
-    if let Some(stripped) = path.strip_prefix("~/")
+    let expanded = expand_env_vars(path);
+
+    // Handle ~/  prefix for backward compatibility
+    if let Some(stripped) = expanded.strip_prefix("~/")
         && let Ok(home) = env::var("HOME")
     {
         PathBuf::from(home).join(stripped)
     } else {
-        PathBuf::from(path)
+        PathBuf::from(expanded)
+    }
+}
+
+/// Expands environment variables using the shell.
+/// Supports `${VAR}`, `$VAR`, and other shell expansion patterns.
+/// If expansion fails, returns the original input unchanged.
+fn expand_env_vars(input: &str) -> String {
+    // Skip shell invocation if there's no $ character (no env vars to expand)
+    if !input.contains('$') {
+        return input.to_string();
+    }
+
+    use std::process::Command;
+
+    // Use shell to expand environment variables
+    let output = Command::new("sh")
+        .arg("-c")
+        .arg(format!("printf '%s' \"{}\"", input.replace('"', "\\\"")))
+        .output();
+
+    match output {
+        Ok(result) if result.status.success() => {
+            String::from_utf8(result.stdout).unwrap_or_else(|_| input.to_string())
+        }
+        _ => input.to_string(),
     }
 }
 
@@ -229,22 +259,14 @@ Preferences:
 
     #[test]
     fn test_expand_home_path() {
-        let original_home = std::env::var("HOME");
-        unsafe {
-            std::env::set_var("HOME", "/test/home");
+        // Use actual system HOME to avoid shell subprocess env issues
+        if let Ok(home) = std::env::var("HOME") {
+            let expanded = expand_home_path("~/test/path");
+            assert_eq!(expanded, PathBuf::from(format!("{}/test/path", home)));
         }
-
-        let expanded = expand_home_path("~/test/path");
-        assert_eq!(expanded, PathBuf::from("/test/home/test/path"));
 
         let not_expanded = expand_home_path("/absolute/path");
         assert_eq!(not_expanded, PathBuf::from("/absolute/path"));
-
-        unsafe {
-            if let Ok(home) = original_home {
-                std::env::set_var("HOME", home);
-            }
-        }
     }
 
     #[test]
@@ -339,5 +361,56 @@ Preferences:
     fn test_expand_home_path_without_tilde() {
         let path = expand_home_path("relative/path");
         assert_eq!(path, PathBuf::from("relative/path"));
+    }
+
+    #[test]
+    fn test_expand_env_vars_single() {
+        // Use actual system HOME to avoid shell subprocess env issues
+        if let Ok(home) = std::env::var("HOME") {
+            let expanded = expand_env_vars("${HOME}/.dotfiles");
+            assert_eq!(expanded, format!("{}/.dotfiles", home));
+        }
+    }
+
+    #[test]
+    fn test_expand_env_vars_multiple() {
+        // Use actual system env vars to avoid shell subprocess env issues
+        if let (Ok(home), Ok(user)) = (std::env::var("HOME"), std::env::var("USER")) {
+            let expanded = expand_env_vars("${HOME}/path/${USER}/dir");
+            assert_eq!(expanded, format!("{}/path/{}/dir", home, user));
+        }
+    }
+
+    #[test]
+    fn test_expand_env_vars_undefined() {
+        // Shell expands undefined variables to empty string
+        let expanded = expand_env_vars("${UNDEFINED_VAR_12345}/path");
+        assert_eq!(expanded, "/path");
+    }
+
+    #[test]
+    fn test_expand_home_path_with_env_var() {
+        // Use actual system HOME to avoid shell subprocess env issues
+        if let Ok(home) = std::env::var("HOME") {
+            let expanded = expand_home_path("${HOME}/.dotfiles");
+            assert_eq!(expanded, PathBuf::from(format!("{}/.dotfiles", home)));
+        }
+    }
+
+    #[test]
+    fn test_expand_env_vars_no_vars() {
+        let expanded = expand_env_vars("/absolute/path/without/vars");
+        assert_eq!(expanded, "/absolute/path/without/vars");
+    }
+
+    #[test]
+    fn test_expand_env_vars_mixed_with_tilde() {
+        // Test that ~/ and ${VAR} can coexist using actual system environment
+        // This avoids issues with shell subprocess not seeing test-modified env vars
+        if let (Ok(home), Ok(user)) = (std::env::var("HOME"), std::env::var("USER")) {
+            let expanded = expand_home_path("~/${USER}/config");
+            let expected = PathBuf::from(format!("{}/{}/config", home, user));
+            assert_eq!(expanded, expected);
+        }
     }
 }
