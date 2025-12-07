@@ -361,7 +361,7 @@ fn create_zip(destination: &Path, manifest: &Manifest, root: &Path) -> Result<()
     let mut writer = ZipWriter::new(file);
 
     let manifest_bytes = serde_json::to_vec_pretty(manifest)?;
-    writer.start_file(
+    writer.start_file::<_, ()>(
         MANIFEST_FILE_NAME,
         ZipFileOptions::default()
             .compression_method(CompressionMethod::Deflated)
@@ -485,7 +485,7 @@ fn add_file_to_zip(
 
     if entry.path.ends_with('/') {
         let dir_path = format!("{}/", path_to_string(Path::new(trimmed)));
-        writer.add_directory(
+        writer.add_directory::<_, ()>(
             dir_path,
             ZipFileOptions::default().unix_permissions(entry.mode),
         )?;
@@ -493,7 +493,7 @@ fn add_file_to_zip(
     }
 
     let mut file = File::open(&full_path)?;
-    writer.start_file(
+    writer.start_file::<_, ()>(
         path_to_string(Path::new(trimmed)),
         ZipFileOptions::default()
             .compression_method(CompressionMethod::Deflated)
